@@ -19,7 +19,7 @@ namespace MMITest
             // read file
 
             String file = String.Empty;
-#if __MONOCS__
+			#if __MonoCS__
                         file = "/home/hanna/Desktop/Graph1.txt";
 
 #else
