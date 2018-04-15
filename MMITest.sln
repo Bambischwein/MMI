@@ -1,7 +1,14 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27428.2037
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MMITest", "MMITest.csproj", "{8C1685BB-CD8D-4FC8-9E56-D7DA6885D7DE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Graphen", "Graphen", "{D230BCED-4125-4F3A-8589-024213913430}"
+	ProjectSection(SolutionItems) = preProject
+		Graph2.txt = Graph2.txt
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,5 +20,11 @@ Global
 		{8C1685BB-CD8D-4FC8-9E56-D7DA6885D7DE}.Debug|x86.Build.0 = Debug|x86
 		{8C1685BB-CD8D-4FC8-9E56-D7DA6885D7DE}.Release|x86.ActiveCfg = Release|x86
 		{8C1685BB-CD8D-4FC8-9E56-D7DA6885D7DE}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {73D2A437-F0BE-44EF-A088-303A50895D67}
 	EndGlobalSection
 EndGlobal
