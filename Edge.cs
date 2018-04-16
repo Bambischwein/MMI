@@ -4,9 +4,16 @@ namespace MMITest
 {
 	public class Edge
 	{
-		public Edge ()
+		public double Weight{ get; set; }
+		public bool Visited{ get; set; }
+		public Vertices SrcNode{ get; set; }
+		public Vertices TrgNode{ get; set; }
+
+		public Edge (Vertices srcNode, Vertices trgNode, double weight, Boolean visited)
 		{
-			double value;
+			SrcNode = srcNode;
+			TrgNode = trgNode;
+
 		}
 	}
 }

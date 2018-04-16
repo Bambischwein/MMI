@@ -40,3 +40,6 @@ namespace MMITest
         }
 	}
 }
+
+
+// Gui für gewichtet/ungewichtet, gerichtet, ....
