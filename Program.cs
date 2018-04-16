@@ -10,7 +10,7 @@ namespace MMITest
 	class MainClass
 	{
 
-        public static void Main (string[] args)
+        public static void Main ()
 		{
 
             // Searching search = new Searching ();
@@ -18,6 +18,10 @@ namespace MMITest
             // search.Tiefensuche ();
             // read file
 
+            StartGui test = new StartGui();
+            test.Show();
+            Thread.Sleep(5000);
+            
             String file = String.Empty;
 			#if __MonoCS__
                         file = "/home/hanna/Desktop/Graph1.txt";
@@ -36,7 +40,6 @@ namespace MMITest
                     Console.WriteLine(line);
                 }
             }
-
         }
 	}
 }
