@@ -3,18 +3,30 @@
 namespace MMITest
 {
 	public class Edge
-	{
-		public double Weight{ get; set; }
+    {
+        #region Public Member
+        public double Weight{ get; set; }
 		public bool Visited{ get; set; }
-		public Vertices SrcNode{ get; set; }
-		public Vertices TrgNode{ get; set; }
-
-		public Edge (Vertices srcNode, Vertices trgNode, double weight, Boolean visited)
+		public Node SourceNode{ get; set; }
+		public Node TargetNode { get; set; }
+        #endregion
+        #region Constructor
+        public Edge (Node sourceNode, Node targetNode)
 		{
-			SrcNode = srcNode;
-			TrgNode = trgNode;
-
+			SourceNode = sourceNode;
+            TargetNode = targetNode;
+            Weight = 1.0;
+            Visited = false;
 		}
-	}
+
+        public Edge(Node sourceNode, Node targetNode, double weight)
+        {
+            SourceNode = sourceNode;
+            TargetNode = targetNode;
+            Weight = weight;
+            Visited = false;
+        }
+        #endregion
+    }
 }
 

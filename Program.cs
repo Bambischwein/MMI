@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Reflection;
+using System.Collections.Generic;
 
 namespace MMITest
 {
@@ -11,17 +12,7 @@ namespace MMITest
 	{
 
         public static void Main ()
-		{
-
-            // Searching search = new Searching ();
-            // search.Breitensuche ();
-            // search.Tiefensuche ();
-            // read file
-
-            StartGui test = new StartGui();
-            test.Show();
-            Thread.Sleep(5000);
-            
+		{            
             String file = String.Empty;
 			#if __MonoCS__
                         file = "/home/hanna/Desktop/Graph1.txt";
@@ -29,20 +20,16 @@ namespace MMITest
 #else
             file = @"C:\Users\Hanna\\MMI\Graph2.txt";
 #endif
+            Graphenbibiliothek einleser = new Graphenbibiliothek();
+            IList<Node> test = einleser.KantenListeEinlesen(file, false);
 
 
-            // string file = @"..\Graphen\Graph2.txt";
-            if (File.Exists(file))
-            {
-                string text = File.ReadAllText(file);
-                foreach (var line in text)
-                {
-                    Console.WriteLine(line);
-                }
-            }
+
+            // Breitensuche
+            Node testen = new Node(0);
+            Searching search = new Searching();
+            search.Tiefensuche();
+            int b = 0;
         }
-	}
+    }
 }
-
-
-// Gui für gewichtet/ungewichtet, gerichtet, ....

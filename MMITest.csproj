@@ -39,6 +39,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Graphenbibiliothek.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Edge.cs" />
@@ -48,7 +49,7 @@
     <Compile Include="StartGui.Designer.cs">
       <DependentUpon>StartGui.cs</DependentUpon>
     </Compile>
-    <Compile Include="Vertices.cs" />
+    <Compile Include="Node.cs" />
     <Compile Include="Reader.cs" />
     <Compile Include="Searching.cs" />
   </ItemGroup>
