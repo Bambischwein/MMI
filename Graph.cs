@@ -32,7 +32,7 @@ namespace MMITest
 		/// </summary>
 		public void Tiefensuche()
 		{ 
-			_Test = new Dictionary<int, int> ();
+			_Components = new Dictionary<int, int> ();
 			Tiefensuche (_NodeList.First());
 		}
 
@@ -93,10 +93,10 @@ namespace MMITest
 		public void Breitensuche(Node node)
 		{
 			Queue<Node> Q = new Queue<Node> ();
-			Node lastNode = new Node ();
+			// Node lastNode = new Node ();
 			node.IsVisited = true;
 			Q.Enqueue (node);
-			Breitensuche(Q, lastNode);
+			// Breitensuche(Q, lastNode);
 
 		}
 

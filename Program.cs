@@ -25,11 +25,11 @@ namespace MMITest
 			newGraph.KantenListeEinlesen(file, false);
 
 			newGraph.Tiefensuche ();
-			int maxTiefensuche = newGraph._Test.Max(n => n.Value);
-			newGraph.Breitensuche ();
-			int maxBreitensuche = newGraph._Test.Max(n => n.Value);
+			int maxTiefensuche = newGraph._Components.Max(n => n.Value);
+			// newGraph.Breitensuche ();
+			//int maxBreitensuche = newGraph._Components.Max(n => n.Value);
 			Console.WriteLine ("Ergebnis Tiefensuche:  {0} ", maxTiefensuche); 
-			Console.WriteLine ("Ergebnis Breitensuche:  {0} ", maxBreitensuche); 
+			// Console.WriteLine ("Ergebnis Breitensuche:  {0} ", maxBreitensuche); 
 
             int b = 0;
         }
