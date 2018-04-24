@@ -15,31 +15,28 @@ namespace MMITest
         public static void Main ()
 		{            
             String file = String.Empty;
+
+            // BS unterscheidung
 #if __MonoCS__
             file = "/home/hanna/Desktop/Graph2.txt";
 
 #else
-            file = @"C:\Users\Hanna\\MMI\Graph2.txt";
+            file = @"C:\Users\Hanna\\MMI\Graph1.txt";
 #endif
+            // Graph einlesen
             Graph newGraph = new Graph();
-			newGraph.KantenListeEinlesen(file, false);
+            // newGraph.KantenListeEinlesen(file, false);
+            newGraph.AdjazenzmatrixEinlesen(file);
 
+             // Tiefen- und Breitensuche
 			newGraph.Tiefensuche ();
-			int maxTiefensuche = newGraph._Components.Max(n => n.Value);
+            int compCountTiefensuche = newGraph._ComponentsList.Count();  
+            
+            newGraph.Breitensuche ();
+            int compCountBreitensuche = newGraph._ComponentsList.Count();
 
-			List<List<int>> test = new List<List<int>> ();
-			test.Add (new List<int>(1));
-			test.Add (new List<int>(2));
-			test [0].Add (1);
-			int a = test.Count ();
-			test.Add (new List<int> ());
-
-
-
-			// newGraph.Breitensuche ();
-			//int maxBreitensuche = newGraph._Components.Max(n => n.Value);
-			Console.WriteLine ("Anzahl der Zusammenhangskomponenten (Tiefensuche):  {0} ", maxTiefensuche); 
-			// Console.WriteLine ("Ergebnis Breitensuche:  {0} ", maxBreitensuche); 
-        }
+            Console.WriteLine ("Anzahl der Zusammenhangskomponenten (Tiefensuche):  {0} ", compCountTiefensuche); 
+            Console.WriteLine ("Anzahl der Zusammenhangskomponenten (Breitensuche):  {0} ", compCountBreitensuche);  
+          }
     }
 }
