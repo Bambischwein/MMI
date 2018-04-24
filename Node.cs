@@ -10,7 +10,7 @@ namespace MMITest
         public int ID{ get; set;}
 		public Boolean IsVisited{ get; set;}
         public IList<Edge> Edges { get; set; }
-        public int ComponentCounter { get; set; }
+        public int BelongsToComponent { get; set; }
         #endregion
 
         #region Constructor
@@ -20,7 +20,7 @@ namespace MMITest
             ID = id;
             IsVisited = false;
             Edges = new List<Edge>();
-            ComponentCounter = 0;
+			BelongsToComponent = -1;
 		}
 
         public void Add(Edge edge)
