@@ -11,7 +11,7 @@ namespace MMITest
     {
 		#region Public Member
 
-        // public List<List<Node>> _Components { get; set; }
+        public List<List<Node>> _ComponentsList { get; set; }
 		public Dictionary<int, int> _Components { get; set; }
 		IList<Node> _NodeList { get; set; }
 
@@ -23,7 +23,7 @@ namespace MMITest
 		public Graph()
 		{
 			_NodeList = new List<Node>();
-			// _Components = new List<List<Node>> ();
+			_ComponentsList = new List<List<Node>> ();
 			_Components = new Dictionary<int, int> ();
 		}
 
@@ -33,8 +33,9 @@ namespace MMITest
 		public void Tiefensuche()
 		{ 
 			_Components = new Dictionary<int, int> ();
-			Tiefensuche (_NodeList.First());
+			Tiefensuche (_NodeList.First ());
 		}
+
 
 		/// <summary>
 		/// Tiefensuche
@@ -43,16 +44,18 @@ namespace MMITest
 		public void Tiefensuche(Node node)
 		{
 			// Knoten initialisiert mit 0, also muss der counter  bei 1 starten
-			int counter = 1;
+			int counter = 0;
 			// Tiefensuche (node, counter);
 			foreach (Node n in _NodeList)
 			{
+				List<Node> tmp = new List<Node> ();
 				if (n.BelongsToComponent == -1)
 				{
 					// Console.WriteLine("Found connected component #" + BelongsToComponent);
-					Tiefensuche(n, counter);
+					tmp = Tiefensuche(n, counter, tmp);
 					counter++;
 				}
+				_ComponentsList.Add (tmp);
 			}
 		}
 
@@ -61,20 +64,21 @@ namespace MMITest
 		/// </summary>
 		/// <param name="node">Node.</param>
 		/// <param name="counter">Counter.</param>
-		private void Tiefensuche(Node node, int counter)
+		private List<Node> Tiefensuche(Node node, int counter, List<Node> tmp)
 		{			
 			node.IsVisited = true;
 			node.BelongsToComponent = counter;
-			//_Components[counter - 1].Add(node);
 			_Components.Add(node.ID, counter);
+			tmp.Add (node);
 			foreach (Edge e in node.Edges)
 			{
 				Node nextVertice = e.TargetNode;
 				if (nextVertice.BelongsToComponent == -1)
 				{
-					Tiefensuche(nextVertice, counter);
+					Tiefensuche(nextVertice, counter, tmp);
 				}
 			}
+			return tmp;
 		}
 
 		/// <summary>
