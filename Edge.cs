@@ -5,12 +5,16 @@ namespace MMITest
 	public class Edge
     {
         #region Public Member
+
         public double Weight{ get; set; }
 		public bool Visited{ get; set; }
 		public Node SourceNode{ get; set; }
 		public Node TargetNode { get; set; }
+
         #endregion
+
         #region Constructor
+
         public Edge (Node sourceNode, Node targetNode)
 		{
 			SourceNode = sourceNode;

@@ -9,24 +9,29 @@ namespace MMITest
 
         public int ID{ get; set;}
 		public Boolean IsVisited{ get; set;}
-        public IList<Edge> Edges { get; set; }
-        public int Zugehörigkeitskomponente { get; set; }
+        public IList<Edge> Edges { get; set;}
+        public int ComponentCount { get; set;}
         #endregion
 
-        #region Constructor
+        #region Konstruktor
 
         public Node (int id)
 		{
             ID = id;
             IsVisited = false;
             Edges = new List<Edge>();
-			Zugehörigkeitskomponente = -1;
+			ComponentCount = -1;
 		}
+
+		#endregion
+
+		#region Public Member
 
         public void Add(Edge edge)
         {
             Edges.Add(edge);
         }
+
         #endregion
 
     }

@@ -1,0 +1,15 @@
+﻿<Properties StartupItem="MMITest.csproj">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Graph.cs">
+    <Files>
+      <File FileName="Program.cs" Line="31" Column="39" />
+      <File FileName="Graph.cs" Line="132" Column="61" />
+      <File FileName="Node.cs" Line="29" Column="3" />
+      <File FileName="Edge.cs" Line="10" Column="35" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

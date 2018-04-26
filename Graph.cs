@@ -12,23 +12,21 @@ namespace MMITest
         #region Public Member
 
         // Liste der Zusammenhangskomponenten
-        public List<List<Node>> _ComponentsList { get; set; }
-        // Liste der Zusammenhangskomponenten
-        // public Dictionary<int, int> _Components { get; set; }
+        public List<List<Node>> ComponentsList { get; set; }
         // Liste der Knoten
-        public IList<Node> _NodeList { get; set; }
+        public IList<Node> NodeList { get; set; }
 
         #endregion
 
         #region Konstruktor
+
         /// <summary>
         /// Konstruktor
         /// </summary>
         public Graph()
         {
-            _NodeList = new List<Node>();
-            _ComponentsList = new List<List<Node>>();
-            // _Components = new Dictionary<int, int> ();
+            NodeList = new List<Node>();
+            ComponentsList = new List<List<Node>>();
         }
 
         #endregion
@@ -37,8 +35,8 @@ namespace MMITest
 
         private void Reset()
         {
-            _ComponentsList = new List<List<Node>>();
-            foreach (Node node in _NodeList)
+            ComponentsList = new List<List<Node>>();
+            foreach (Node node in NodeList)
             {
                 node.IsVisited = false;
                 foreach (Edge e in node.Edges)
@@ -60,7 +58,8 @@ namespace MMITest
         {
             Console.WriteLine("Starte Tiefensuche");
             Reset();
-            Tiefensuche(_NodeList.First());
+            Tiefensuche(NodeList.First());
+			Console.WriteLine("");
         }
 
 
@@ -70,16 +69,16 @@ namespace MMITest
         /// <param name="node">Node.</param>
         public void Tiefensuche(Node node)
         {
-            // Knoten initialisiert mit 0, also muss der counter  bei 1 starten
+            // Knoten initialisiert mit -1, also muss der counter  bei 1 starten
             int counter = 1;
             // Tiefensuche (node, counter);
-            foreach (Node n in _NodeList)
+            foreach (Node n in NodeList)
             {
-                if (n.Zugehörigkeitskomponente == -1)
+                if (n.ComponentCount == -1)
                 {
                     Console.WriteLine("Berechne Komponente {0}", counter);
                     Console.WriteLine("Start Node {0}", n.ID);
-                    _ComponentsList.Add(new List<Node>());
+                    ComponentsList.Add(new List<Node>());
                     Tiefensuche(n, counter);
                     counter++;
                     
@@ -95,13 +94,13 @@ namespace MMITest
         private void Tiefensuche(Node node, int counter)
         {
             node.IsVisited = true;
-            node.Zugehörigkeitskomponente = counter;
-            _ComponentsList[counter - 1].Add(node);
+            node.ComponentCount = counter;
+            ComponentsList[counter - 1].Add(node);
             Console.WriteLine("Current Node: {0}", node.ID);
             foreach (Edge e in node.Edges)
             {
                 Node nextVertice = e.TargetNode;
-                if (nextVertice.Zugehörigkeitskomponente == -1)
+                if (nextVertice.ComponentCount == -1)
                 {
                     Tiefensuche(nextVertice, counter);
                 }
@@ -117,22 +116,24 @@ namespace MMITest
         /// </summary>
         public void Breitensuche()
         {
-            Breitensuche(_NodeList.FirstOrDefault());
+            Breitensuche(NodeList.FirstOrDefault());
+
         }
         /// <summary>
         /// Breitensuche
         /// </summary>
+		/// <param name="startNode">startNode</param>
         public void Breitensuche(Node startNode)
         {
             Console.WriteLine("Starte Breitensuche");
             int counter = 1;
 
             Reset();            
-            while (_NodeList.Where(n => n.IsVisited == false).Count() > 0)
+            while (NodeList.Where(n => n.IsVisited == false).Count() > 0)
             {
                 Console.WriteLine("Berechne Komponente {0}", counter);
-                _ComponentsList.Add(new List<Node>());
-                startNode = _NodeList.Where(n => n.IsVisited == false).FirstOrDefault();
+                ComponentsList.Add(new List<Node>());
+                startNode = NodeList.Where(n => n.IsVisited == false).FirstOrDefault();
                 Console.WriteLine("StartNode: {0}", startNode.ID);
                 Breitensuche(startNode, counter);
                 counter++;
@@ -143,7 +144,8 @@ namespace MMITest
         /// <summary>
         /// Breitensuche
         /// </summary>
-        /// <param name="Nodes">Nodes.</param>
+        /// <param name="startNodes">startNode.</param>
+		/// <param name="counter">Counter for components</param>
         private void Breitensuche(Node startNode, int counter)
         {
             Queue<Node> Q = new Queue<Node>();
@@ -151,15 +153,18 @@ namespace MMITest
             startNode.IsVisited = true;
             while (Q.Any())
             {
+				// Knoten aus der Queue nehmen
                 Node currentNode = Q.Dequeue();            
                 Console.WriteLine("Current Node: {0}", currentNode.ID);
+				// Jeden Nachbarn, der noch nicht besucht wurde, in die 
+				// Queue einfügen und als besucht markieren
                 foreach (var edge in currentNode.Edges)
                 {
                     if (!edge.TargetNode.IsVisited)
                     {
                         Q.Enqueue(edge.TargetNode);
                         edge.TargetNode.IsVisited = true;
-                        _ComponentsList[counter - 1].Add(edge.TargetNode);
+                        ComponentsList[counter - 1].Add(edge.TargetNode);
                     }
                 }
 
@@ -175,9 +180,8 @@ namespace MMITest
         ///  Adjazenzmatrix einlesen
         /// </summary>
         /// <param name="path">Path.</param>
-        public void AdjazenzmatrixEinlesen(String path)
+        public void ReadAdjazenzmatrix(String path)
         {
-            Dictionary<int, Node> NodeLookUp = new Dictionary<int, Node>();
             List<string> list = new List<string>();
             string line = String.Empty;
 
@@ -190,12 +194,11 @@ namespace MMITest
             // Anzahl der Knoten
             int numberOfNodes = Convert.ToInt32(list[0]);
 
-            // Knoten erstellen und in Dictionary einfügen
+            // Knoten erstellen und in Knotenliste einfügen
             for (int i = 0; i < numberOfNodes; i++)
             {
                 Node newNode = new Node(i);
-                _NodeList.Add(newNode);
-                NodeLookUp[newNode.ID] = newNode;
+                NodeList.Add(newNode);                
             }
 
             // Daten einlesen und verarbeiten
@@ -209,8 +212,8 @@ namespace MMITest
                 for (int j = 0; j < elements.Count(); j++)
                 {
                     if (Convert.ToInt32(elements[j]) == 1)
-                    {                        
-                        NodeLookUp[k - 1].Add(new Edge(NodeLookUp[k - 1], NodeLookUp[j], weight));
+                    {                                                
+						NodeList[k - 1].Add(new Edge(NodeList[k - 1], NodeList[j], weight));
                     }
                 }                
             }
@@ -221,9 +224,8 @@ namespace MMITest
         /// </summary>
         /// <param name="path">Path.</param>
         /// <param name="isDirected">isDirected.</param>
-        public void KantenListeEinlesen(String path, Boolean isDirected)
+        public void ReadKantenListe(String path, Boolean isDirected)
         {                       
-            Dictionary<int, Node> NodeLookUp = new Dictionary<int, Node>();
             List<string> list = new List<string>();
             string line = String.Empty;
 
@@ -240,8 +242,7 @@ namespace MMITest
             for (int i = 0; i < numberOfNodes; i++)
             {
                 Node newNode = new Node(i);
-				_NodeList.Add(newNode);
-                NodeLookUp[newNode.ID] = newNode;
+				NodeList.Add(newNode);
             }
 
             // Daten einlesen und verarbeiten
@@ -258,11 +259,11 @@ namespace MMITest
                 targetID = Convert.ToInt32(elements[1]);
 
                 // Source- und Targetnode verbinden
-                NodeLookUp[sourceID].Add(new Edge(NodeLookUp[sourceID], NodeLookUp[targetID], weight));
+				NodeList[sourceID].Add(new Edge(NodeList[sourceID], NodeList[targetID], weight));
 				// Rückrichtung nur einfügen, wenn Graph nicht gerichtet ist
                 if (!isDirected)
                 {
-                    NodeLookUp[targetID].Add(new Edge(NodeLookUp[targetID], NodeLookUp[sourceID], weight));
+					NodeList[targetID].Add(new Edge(NodeList[targetID], NodeList[sourceID], weight));             
                 }
             }
         }
