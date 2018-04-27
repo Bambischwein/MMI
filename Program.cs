@@ -21,14 +21,14 @@ namespace MMITest
             file = "/home/hanna/Desktop/Graph1.txt";
 
 #else
-            file = @"C:\Users\Hanna\\MMI\Graph1.txt";
+            file = @"C:\Users\Hanna\\MMI\Graph2.txt";
 #endif
 
             // Graph einlesen
             Graph newGraph = new Graph();
 
-           	// newGraph.ReadKantenListe(file, false);
-            newGraph.ReadAdjazenzmatrix(file);
+           	newGraph.ReadKantenListe(file, true);
+            //newGraph.ReadAdjazenzmatrix(file);
 
              // Tiefen- und Breitensuche
 			newGraph.Tiefensuche ();

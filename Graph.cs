@@ -254,17 +254,20 @@ namespace MMITest
                 int targetID = -1;
 
                 string[] elements = list[i].Split('\t');
-
                 sourceID = Convert.ToInt32(elements[0]);
                 targetID = Convert.ToInt32(elements[1]);
-
-                // Source- und Targetnode verbinden
+                if (elements.Count() == 2)
+	            {
+                    // Source- und Targetnode verbinden, da ungerichtet auch rückrichtung verbinden                   
+                    NodeList[targetID].Add(new Edge(NodeList[targetID], NodeList[sourceID], weight));
+	            }
+                else if (elements.Count() == 3)
+	            {
+                    // Source- und Targetnode verbinden
+                    weight = Convert.ToDouble(elements[2].Replace(".", ","));
+	            }
 				NodeList[sourceID].Add(new Edge(NodeList[sourceID], NodeList[targetID], weight));
-				// Rückrichtung nur einfügen, wenn Graph nicht gerichtet ist
-                if (!isDirected)
-                {
-					NodeList[targetID].Add(new Edge(NodeList[targetID], NodeList[sourceID], weight));             
-                }
+                
             }
         }
 
