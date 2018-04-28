@@ -18,7 +18,7 @@ namespace MMITest
 
             // BS unterscheidung
 #if __MonoCS__
-            file = "/home/hanna/Desktop/Graph1.txt";
+            file = "/home/hanna/Desktop/Graph2.txt";
 
 #else
             file = @"C:\Users\Hanna\\MMI\Graph2.txt";
@@ -26,16 +26,18 @@ namespace MMITest
 
             // Graph einlesen
             Graph newGraph = new Graph();
-
-           	newGraph.ReadKantenListe(file, true);
+           	IList<Node> NodeList = newGraph.ReadKantenListe(file, true);
             //newGraph.ReadAdjazenzmatrix(file);
 
-             // Tiefen- und Breitensuche
-			newGraph.Tiefensuche ();
-            int compCountTiefensuche = newGraph.ComponentsList.Count();  
+			// Tiefen- und Breitensuche
+			Calc newCalculation = new Calc (NodeList);
+			newCalculation.Breitensuche ();
+			int compCountBreitensuche = newCalculation.ComponentsList.Count();
+			newCalculation.Tiefensuche ();
+			int compCountTiefensuche = newCalculation.ComponentsList.Count(); 
+
             
-            newGraph.Breitensuche ();
-            int compCountBreitensuche = newGraph.ComponentsList.Count();
+
 
             Console.WriteLine ("Anzahl der Zusammenhangskomponenten (Tiefensuche):  {0} ", compCountTiefensuche); 
             Console.WriteLine ("Anzahl der Zusammenhangskomponenten (Breitensuche):  {0} ", compCountBreitensuche);  
