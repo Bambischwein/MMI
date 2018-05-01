@@ -30,6 +30,7 @@ namespace MMITest
             Weight = weight;
             Visited = false;
         }
+
         #endregion
     }
 }

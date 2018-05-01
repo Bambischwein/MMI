@@ -1,17 +1,16 @@
 ﻿<Properties StartupItem="MMITest.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Program.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Calc.cs">
     <Files>
-      <File FileName="Program.cs" Line="26" Column="4" />
-      <File FileName="Graph.cs" Line="142" Column="3" />
+      <File FileName="Program.cs" Line="40" Column="112" />
+      <File FileName="Graph.cs" Line="93" Column="58" />
       <File FileName="Node.cs" Line="1" Column="1" />
-      <File FileName="Edge.cs" Line="1" Column="1" />
+      <File FileName="Edge.cs" Line="33" Column="3" />
+      <File FileName="Calc.cs" Line="178" Column="4" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
-    <BreakpointStore>
-      <Breakpoint file="/home/hanna/MonoTest/MMI/MMI/Program.cs" line="34" column="10" />
-    </BreakpointStore>
+    <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />
 </Properties>

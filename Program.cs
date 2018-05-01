@@ -27,20 +27,22 @@ namespace MMITest
             // Graph einlesen
             Graph newGraph = new Graph();
            	IList<Node> NodeList = newGraph.ReadKantenListe(file, true);
-            //newGraph.ReadAdjazenzmatrix(file);
+			//IList<Node> NodeList = newGraph.ReadAdjazenzmatrix(file);
+
+			Calc newCalculation = new Calc (NodeList);
 
 			// Tiefen- und Breitensuche
-			Calc newCalculation = new Calc (NodeList);
-			newCalculation.Breitensuche ();
-			int compCountBreitensuche = newCalculation.ComponentsList.Count();
-			newCalculation.Tiefensuche ();
-			int compCountTiefensuche = newCalculation.ComponentsList.Count(); 
+			// newCalculation.Breitensuche ();
+			// int compCountBreitensuche = newCalculation.ComponentsList.Count();
+			// newCalculation.Tiefensuche ();
+			// int compCountTiefensuche = newCalculation.ComponentsList.Count(); 
+			// onsole.WriteLine ("Anzahl der Zusammenhangskomponenten (Tiefensuche):  {0} ", compCountTiefensuche); 
+			// Console.WriteLine ("Anzahl der Zusammenhangskomponenten (Breitensuche):  {0} ", compCountBreitensuche);  
+
+			IList<Node> primGraph = newCalculation.Prim ();
+
 
             
-
-
-            Console.WriteLine ("Anzahl der Zusammenhangskomponenten (Tiefensuche):  {0} ", compCountTiefensuche); 
-            Console.WriteLine ("Anzahl der Zusammenhangskomponenten (Breitensuche):  {0} ", compCountBreitensuche);  
           }
     }
 }

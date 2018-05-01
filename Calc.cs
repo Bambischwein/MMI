@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MMITest;
 
 namespace MMITest
 {
@@ -166,6 +167,41 @@ namespace MMITest
 		}
 
 		#endregion
+
+		#region Prim
+
+		public IList<Node> Prim()
+		{
+			IList<Node> primTree = new List<Node> ();
+			primTree.Add(NodeList.FirstOrDefault());
+			primTree.First ().IsVisited = true;	
+
+			Queue<Node> q = new Queue<Node> ();
+
+			double[] pi = new double[NodeList.Count()];
+			double[] adj = new double[NodeList.Count()];
+			double[] wert = new double[NodeList.Count()];
+
+			for (int a = 0; a <= NodeList.Count(); a++)
+			{
+				pi[a] = 0;
+				wert[a] = double.NaN;
+			}
+
+
+			double weight = double.NaN;
+			foreach (Edge edge in primTree.First().Edges) 
+			{
+				if (edge.Weight > weight) 
+				{
+					weight = edge.Weight;
+				}
+			}
+
+
+
+			return primTree;
+		}
+		#endregion
 	}
 }
-
