@@ -7,6 +7,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MMITest", "MMITest.csproj",
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Graphen", "Graphen", "{D230BCED-4125-4F3A-8589-024213913430}"
 	ProjectSection(SolutionItems) = preProject
+		G_10_20.txt = G_10_20.txt
+		G_10_200.txt = G_10_200.txt
+		G_1_2.txt = G_1_2.txt
+		G_1_20.txt = G_1_20.txt
+		G_1_200.txt = G_1_200.txt
+		G_Test.txt = G_Test.txt
 		Graph1.txt = Graph1.txt
 		Graph2.txt = Graph2.txt
 		Graph3.txt = Graph3.txt

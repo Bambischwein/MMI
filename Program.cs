@@ -21,12 +21,12 @@ namespace MMITest
             file = "/home/hanna/Desktop/Graph2.txt";
 
 #else
-            file = @"C:\Users\Hanna\\MMI\Graph2.txt";
+            file = @"C:\Users\Hanna\\MMI\G_1_2.txt";
 #endif
 
             // Graph einlesen
             Graph newGraph = new Graph();
-           	IList<Node> NodeList = newGraph.ReadKantenListe(file, true);
+           	IList<Node> NodeList = newGraph.ReadKantenListe(file, false);
 			//IList<Node> NodeList = newGraph.ReadAdjazenzmatrix(file);
 
 			Calc newCalculation = new Calc (NodeList);
@@ -39,8 +39,9 @@ namespace MMITest
 			// onsole.WriteLine ("Anzahl der Zusammenhangskomponenten (Tiefensuche):  {0} ", compCountTiefensuche); 
 			// Console.WriteLine ("Anzahl der Zusammenhangskomponenten (Breitensuche):  {0} ", compCountBreitensuche);  
 
-			IList<Node> primGraph = newCalculation.Prim ();
-
+			newCalculation.Prim (NodeList.First());
+            newCalculation.Kruskal();
+            int a = 0;
 
             
           }

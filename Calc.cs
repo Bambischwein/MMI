@@ -166,42 +166,65 @@ namespace MMITest
 
 		}
 
-		#endregion
+        #endregion
 
-		#region Prim
+        #region Prim
+        /// <summary>
+        /// Berechnet den Algorithmus von Prim
+        /// </summary>
+        public void Prim(Node startNode)
+        {
+            Reset();
+            List<Edge> edgeList = NodeList.SelectMany(node => node.Edges).OrderBy(edge => edge.Weight).ToList();
+            startNode.IsVisited = true;
+            double primWeight = 0.0;
 
-		public IList<Node> Prim()
-		{
-			IList<Node> primTree = new List<Node> ();
-			primTree.Add(NodeList.FirstOrDefault());
-			primTree.First ().IsVisited = true;	
+            // solang nicht alle Knoten besucht sind
+            while (NodeList.Where(n => n.IsVisited == false).Any())
+            {
+                // Suche nächsten erreichbaren Knoten mit minimalem Gewicht
+                Edge e = edgeList.Where(edge => edge.SourceNode.IsVisited && !edge.TargetNode.IsVisited).First();
+                e.TargetNode.IsVisited = true;
+                primWeight += e.Weight;
+                //Console.WriteLine("Ausgabe: {0}    {1}     {2}", e.SourceNode.ID.ToString(), e.TargetNode.ID, e.Weight);
+                edgeList.Remove(e);
+            }
+            Console.WriteLine("Gesamtkosten Prim: {0}", primWeight);
+        }
+        #endregion
 
-			Queue<Node> q = new Queue<Node> ();
+        #region Kruskal
 
-			double[] pi = new double[NodeList.Count()];
-			double[] adj = new double[NodeList.Count()];
-			double[] wert = new double[NodeList.Count()];
+        /// <summary>
+        /// Berechnet den Algorithmus von Kruskal
+        /// </summary>
+        public void Kruskal()
+        {
+            Reset();
 
-			for (int a = 0; a <= NodeList.Count(); a++)
-			{
-				pi[a] = 0;
-				wert[a] = double.NaN;
-			}
+            double mspWeight = 0.0;
+            List<Edge> sortedEdges = NodeList.SelectMany(node => node.Edges).OrderBy(edge => edge.Weight).ToList();
+            
+            foreach (Node n in NodeList)
+            {
+                n.ComponentCount = n.ID;
+            }
 
+            for (int i = 0; i < NodeList.Count() - 1; i++)
+            {
+                Edge e = sortedEdges.Where(edge => ((edge.TargetNode.ComponentCount != edge.SourceNode.ComponentCount))).FirstOrDefault();
+                mspWeight += e.Weight;
+                //Console.WriteLine("Ausgabe: {0}    {1}     {2}", e.SourceNode.ID.ToString(), e.TargetNode.ID, e.Weight);
+                List<Node> toDo = NodeList.Where(node => node.ComponentCount == Math.Max(e.SourceNode.ComponentCount, e.TargetNode.ComponentCount)).ToList();
 
-			double weight = double.NaN;
-			foreach (Edge edge in primTree.First().Edges) 
-			{
-				if (edge.Weight > weight) 
-				{
-					weight = edge.Weight;
-				}
-			}
-
-
-
-			return primTree;
-		}
-		#endregion
-	}
+                foreach (Node n in toDo)
+                {
+                    n.ComponentCount = Math.Min(e.SourceNode.ComponentCount, e.TargetNode.ComponentCount);
+                }
+                sortedEdges.Remove(e);
+            }
+            Console.WriteLine("Gesamtkosten Kruskal: {0}", mspWeight);
+        }
+        #endregion
+    }
 }

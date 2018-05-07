@@ -119,7 +119,8 @@ namespace MMITest
 	            {
                     // Source- und Targetnode verbinden
                     weight = Convert.ToDouble(elements[2].Replace(".", ","));
-	            }
+                    NodeList[targetID].Add(new Edge(NodeList[targetID], NodeList[sourceID], weight));
+                }
 				NodeList[sourceID].Add(new Edge(NodeList[sourceID], NodeList[targetID], weight));
                 
             }
