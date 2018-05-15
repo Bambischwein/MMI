@@ -12,6 +12,8 @@ namespace MMITest
         #region Public Member
         // Liste der Knoten
         public IList<Node> NodeList { get; set; }
+        // Liste der Kanten
+        public IList<Edge> EdgeList { get; set; }
 
         #endregion
 
@@ -70,7 +72,8 @@ namespace MMITest
                     }
                 }                
             }
-			return NodeList;
+            EdgeList = NodeList.SelectMany(node => node.Edges).ToList();
+            return NodeList;
         }
 
         /// <summary>
@@ -112,21 +115,41 @@ namespace MMITest
                 targetID = Convert.ToInt32(elements[1]);
                 if (elements.Count() == 2)
 	            {
-                    // Source- und Targetnode verbinden, da ungerichtet auch rückrichtung verbinden                   
-                    NodeList[targetID].Add(new Edge(NodeList[targetID], NodeList[sourceID], weight));
-	            }
+                    // Source- und Targetnode verbinden, da ungerichtet auch rückrichtung verbinden                                       
+                    NodeList[sourceID].Add(new Edge(NodeList[sourceID], NodeList[targetID], weight));
+                }
                 else if (elements.Count() == 3)
 	            {
                     // Source- und Targetnode verbinden
-                    weight = Convert.ToDouble(elements[2].Replace(".", ","));
+                    weight = Convert.ToDouble(elements[2].Replace(".", ","));                    
+                    NodeList[sourceID].Add(new Edge(NodeList[sourceID], NodeList[targetID], weight));
+                }
+                if (!isDirected)
+                {
                     NodeList[targetID].Add(new Edge(NodeList[targetID], NodeList[sourceID], weight));
                 }
-				NodeList[sourceID].Add(new Edge(NodeList[sourceID], NodeList[targetID], weight));
-                
+
             }
-			return NodeList;
+            EdgeList = NodeList.SelectMany(node => node.Edges).ToList();
+            return NodeList;
         }
 
         #endregion
+
+        /// <summary>
+        /// Kopiert eine EdgeList
+        /// </summary>
+        /// <param name="edgeList"></param>
+        /// <returns></returns>
+        public List<Edge> CopyEdgeList(List<Edge> edgeList)
+        {
+            List<Edge> newList = new List<Edge>();
+            foreach (Edge e in edgeList)
+            {
+                newList.Add(e);
+            }
+            return newList;
+
+        }
     }
 }

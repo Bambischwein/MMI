@@ -13,13 +13,14 @@ namespace MMITest
 
 		// Liste der Zusammenhangskomponenten
 		public List<List<Node>> ComponentsList { get; set; }
-		public IList<Node> NodeList{get; set;}
+		public IList<Node> NodeList{ get; set;}
+        public IList<Edge> EdgeList { get; set; }
 
-		public Calc (IList<Node> nodeList)
+		public Calc (IList<Node> nodeList, IList<Edge> edgeList)
 		{
 			ComponentsList = new List<List<Node>> ();
 			NodeList = nodeList;
-
+            EdgeList = edgeList;
 		}
 
 		#region Private Member
@@ -169,6 +170,7 @@ namespace MMITest
         #endregion
 
         #region Prim
+
         /// <summary>
         /// Berechnet den Algorithmus von Prim
         /// </summary>
@@ -186,11 +188,40 @@ namespace MMITest
                 Edge e = edgeList.Where(edge => edge.SourceNode.IsVisited && !edge.TargetNode.IsVisited).First();
                 e.TargetNode.IsVisited = true;
                 primWeight += e.Weight;
-                //Console.WriteLine("Ausgabe: {0}    {1}     {2}", e.SourceNode.ID.ToString(), e.TargetNode.ID, e.Weight);
                 edgeList.Remove(e);
             }
-            Console.WriteLine("Gesamtkosten Prim: {0}", primWeight);
         }
+        /// <summary>
+        /// Berechnet den Algorithmus von Prim
+        /// </summary>
+        private List<Node> PrimReturn(Node startNode)
+        {
+            Reset();
+
+            List<Node> primNodeList = new List<Node>();
+            for (int i = 0; i < NodeList.Count(); i++)
+            {
+                primNodeList.Add(new Node(i));
+            }
+            List<Edge> edgeList = NodeList.SelectMany(node => node.Edges).OrderBy(edge => edge.Weight).ToList();
+            startNode.IsVisited = true;
+            double primWeight = 0.0;
+
+            // solang nicht alle Knoten besucht sind
+            while (NodeList.Where(n => n.IsVisited == false).Any())
+            {
+                // Suche nächsten erreichbaren Knoten mit minimalem Gewicht
+                Edge e = edgeList.Where(edge => edge.SourceNode.IsVisited && !edge.TargetNode.IsVisited).First();
+                e.TargetNode.IsVisited = true;
+                primWeight += e.Weight;
+                primNodeList[e.SourceNode.ID].Edges.Add(e);
+                edgeList.Remove(e);
+            }
+            return primNodeList;
+            
+        }
+
+
         #endregion
 
         #region Kruskal
@@ -225,6 +256,103 @@ namespace MMITest
             }
             Console.WriteLine("Gesamtkosten Kruskal: {0}", mspWeight);
         }
+
         #endregion
+
+        #region Nächster Nachbar
+
+
+        public Dictionary<Node, Node> NaechsterNachbar(Node startKnoten)
+        {
+            Reset();
+            // Schritt 1: : Wähle einen beliebigen Knoten als Startknoten v
+            // Node startKnoten = NodeList.First();
+            startKnoten.IsVisited = true;
+            List<Edge> listOfMinEdge = new List<Edge>(); // NodeList.SelectMany(node => node.Edges).OrderBy(edge => edge.Weight).ToList();
+            double weight = 0.0;
+            Dictionary<Node, Node> hamiltonKreis = new Dictionary<Node, Node>();
+            // Damit Startknoten nicht überschrieben wird
+            Node nextNode = startKnoten;
+            while (NodeList.Where(n => n.IsVisited == false).Any())
+            {
+                // Schritt 2: : Ermittle die niedrigste Kante, welche den aktuellen Knoten v mit einem
+                // unbesuchten Knoten vu verbindet.
+                Edge minEdge = nextNode.Edges.ToList().OrderBy(e => e.Weight).Where(e => e.TargetNode.IsVisited == false).First();
+                weight += minEdge.Weight;
+                // Schritt 3: : Setze v = vu                
+                hamiltonKreis.Add(nextNode, minEdge.TargetNode);
+                nextNode = minEdge.TargetNode;
+                nextNode.IsVisited = true;
+                // Schritt 4: : Wenn noch nicht alle Knoten besucht wurden gehe wieder zu Schritt 2.
+            }
+            // Schritt 5: : Füge die Kante vom letzten besuchten Knoten zum Startknoten hinzu um
+            // den Kreis zu schließen.
+            hamiltonKreis.Add(nextNode, startKnoten);
+            weight += nextNode.Edges.Where(node => ((node.TargetNode == startKnoten))).First().Weight;
+            // Console.WriteLine("Startknoten: {0}, Distanz: {1}", startKnoten.ID, weight);
+            return hamiltonKreis;
+        }
+        #endregion
+
+        #region Doppelter Baum
+
+        public void DoppelterBaum(Node startKnoten)
+        {
+            Reset();
+            double weight = 0.0;
+
+            // Schritt 1: : Konstruiere einen minimal spannenden Baum T von Kn.
+            List<Node> primMinSpannbaum = PrimReturn(startKnoten);
+
+            // Schritt 2: : Verdopple alle Kanten von T(daraus resultiert ein eulerscher Graph Td).           
+            List<Edge> edgeList = primMinSpannbaum.SelectMany(node => node.Edges).ToList();
+            int tmp = edgeList.Count();
+            for (int i = 0; i < tmp; i++)
+            {
+                edgeList.Add(new Edge(edgeList[i].TargetNode, edgeList[i].SourceNode));
+            }
+
+            // Schritt 3: : Berechne eine Euler - Tour in Td. Wähle Knoten v0 und konstruiere von v0 ausgehend einen Unterkreis K in G, der keine Kante in G zweimal durchläuft
+            Node startNode = edgeList[0].SourceNode;
+            List<Node> euler = new List<Node>();
+            euler.Add(startNode);
+            while (edgeList.Where(n => n.Visited == false).Any())
+            {                
+                Edge e = edgeList.Where(n => n.SourceNode == startNode && n.Visited == false).First();
+                startNode = e.TargetNode;            
+                startNode.IsVisited = true;
+                e.Visited = true;
+                euler.Add(startNode);        
+            }
+
+            // Schritt 4: : Durchlaufe die Euler - Tour von einem Startknoten aus. Falls dabei ein Knoten schon besucht wurde, nehme die Abkürzung zum nächsten unbesuchten Knoten auf der Tour.
+            Reset();
+            List<Node> durchlauf = new List<Node>();
+            startNode = euler.First();
+            Node nextNode = startNode;
+            while (durchlauf.Count() < NodeList.Count())
+            {
+                startNode.IsVisited = true;
+                euler.Remove(startNode);
+                durchlauf.Add(new Node(startNode.ID));
+                if (NodeList.Where(n => n.IsVisited == false).Count() > 0)
+                {
+                    nextNode = euler.First(n => n.IsVisited == false);
+                    Edge e = startNode.Edges.Where(x => x.TargetNode == nextNode).First();
+                    durchlauf.Last().Add(e);
+                    e.Visited = true;
+                    weight += e.Weight;
+                    startNode = nextNode;
+                }
+            }
+            // Letzte Kante und letztes Gewicht hinzufügen
+            Edge eds = EdgeList.Where(n => n.SourceNode.ID == durchlauf.Last().ID && n.TargetNode.ID == durchlauf.First().ID).First();
+            durchlauf.Last().Add(eds);
+
+            weight += eds.Weight;
+            Console.WriteLine("Distanz doppelter Baum: {0}", weight);
+        }
+        #endregion            
+
     }
 }
