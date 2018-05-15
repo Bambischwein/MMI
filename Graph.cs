@@ -121,7 +121,14 @@ namespace MMITest
                 else if (elements.Count() == 3)
 	            {
                     // Source- und Targetnode verbinden
-                    weight = Convert.ToDouble(elements[2].Replace(".", ","));                    
+#if __MonoCS__
+            weight = Convert.ToDouble(elements[2]);
+
+#else
+                    weight = Convert.ToDouble(elements[2].Replace(".", ","));
+#endif
+
+
                     NodeList[sourceID].Add(new Edge(NodeList[sourceID], NodeList[targetID], weight));
                 }
                 if (!isDirected)
