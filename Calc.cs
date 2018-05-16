@@ -260,14 +260,11 @@ namespace MMITest
 
         #region Nächster Nachbar
 
-
         public Dictionary<Node, Node> NaechsterNachbar(Node startKnoten)
         {
             Reset();
             // Schritt 1: : Wähle einen beliebigen Knoten als Startknoten v
-            // Node startKnoten = NodeList.First();
             startKnoten.IsVisited = true;
-            List<Edge> listOfMinEdge = new List<Edge>(); // NodeList.SelectMany(node => node.Edges).OrderBy(edge => edge.Weight).ToList();
             double weight = 0.0;
             Dictionary<Node, Node> hamiltonKreis = new Dictionary<Node, Node>();
             // Damit Startknoten nicht überschrieben wird
@@ -287,8 +284,15 @@ namespace MMITest
             // Schritt 5: : Füge die Kante vom letzten besuchten Knoten zum Startknoten hinzu um
             // den Kreis zu schließen.
             hamiltonKreis.Add(nextNode, startKnoten);
-            weight += nextNode.Edges.Where(node => ((node.TargetNode == startKnoten))).First().Weight;
-            // Console.WriteLine("Startknoten: {0}, Distanz: {1}", startKnoten.ID, weight);
+            weight += nextNode.Edges.Where(node => ((node.TargetNode == startKnoten))).First().Weight;  
+
+			foreach (var n in hamiltonKreis) 
+			{
+				Console.Write ("({0}|{1}) ", n.Key.ID, n.Value.ID);
+			}
+			Console.WriteLine ();
+			Console.WriteLine("Startknoten: {0}; Distanz: {1}", startKnoten.ID, weight);
+
             return hamiltonKreis;
         }
         #endregion
@@ -298,6 +302,7 @@ namespace MMITest
         public void DoppelterBaum(Node startKnoten)
         {
             Reset();
+
             double weight = 0.0;
 
             // Schritt 1: : Konstruiere einen minimal spannenden Baum T von Kn.
@@ -342,14 +347,17 @@ namespace MMITest
                     e.Visited = true;
                     weight += e.Weight;
                     startNode = nextNode;
+					Console.Write ("({0}|{1}) ", e.SourceNode.ID, e.TargetNode.ID);
                 }
             }
             // Letzte Kante und letztes Gewicht hinzufügen
             Edge eds = EdgeList.Where(n => n.SourceNode.ID == durchlauf.Last().ID && n.TargetNode.ID == durchlauf.First().ID).First();
             durchlauf.Last().Add(eds);
-
+			Console.Write ("({0}|{1}) ", eds.SourceNode.ID, eds.TargetNode.ID);
+			Console.WriteLine ();
             weight += eds.Weight;
-            Console.WriteLine("Distanz doppelter Baum: {0}", weight);
+			Console.WriteLine("Distanz: {0}", weight);
+            
         }
         #endregion            
 

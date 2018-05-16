@@ -18,7 +18,7 @@ namespace MMITest
 
             // BS unterscheidung
 #if __MonoCS__
-            file = "/home/hanna/Desktop/Graph2.txt";
+            file = "/home/hanna/Desktop/K_10.txt";
 
 #else
             file = @"C:\Users\Hanna\\MMI\K_12e.txt";
@@ -45,12 +45,15 @@ namespace MMITest
             // newCalculation.Kruskal();
 
             // Nächster Nachbar
+			Console.WriteLine("Naechster Nachbar: ");
             for (int i = 0; i < NodeList.Count(); i++)
             {
                 newCalculation.NaechsterNachbar(NodeList[i]);
             }
-
-            // Doppelter Baum        
+			// newCalculation.NaechsterNachbar (NodeList.First ());
+			Console.WriteLine ();
+            // Doppelter Baum  
+			Console.WriteLine ("Doppelter Baum: ");
             newCalculation.DoppelterBaum(NodeList.First());            
 
 
