@@ -32,6 +32,11 @@ namespace MMITest
             Edges.Add(edge);
         }
 
+		public void Remove(Edge edge)
+		{
+			Edges.Remove (edge);
+		}
+
         #endregion
 
     }

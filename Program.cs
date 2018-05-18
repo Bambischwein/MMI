@@ -44,19 +44,25 @@ namespace MMITest
             // newCalculation.Prim(NodeList.First());
             // newCalculation.Kruskal();
 
+			 // Doppelter Baum
+			newCalculation.DoppelterBaum(NodeList.First());
+			/*
             // Nächster Nachbar
 			Console.WriteLine("Naechster Nachbar: ");
             for (int i = 0; i < NodeList.Count(); i++)
             {
-                newCalculation.NaechsterNachbar(NodeList[i]);
+				newCalculation.NaechsterNachbar(NodeList[i]);
             }
 			// newCalculation.NaechsterNachbar (NodeList.First ());
 			Console.WriteLine ();
+
             // Doppelter Baum  
 			Console.WriteLine ("Doppelter Baum: ");
-            newCalculation.DoppelterBaum(NodeList.First());            
+            newCalculation.DoppelterBaum(NodeList.First());  
+			Console.WriteLine ();
 
 
+			*/
             int a = 0;
 
             

@@ -48,9 +48,9 @@ namespace MMITest
 		/// </summary>
 		public void Tiefensuche()
 		{
-			Console.WriteLine("Starte Tiefensuche");
+			// Console.WriteLine("Starte Tiefensuche");
 			Reset();
-			Tiefensuche(NodeList.First());
+			Tiefensuche(NodeList.First(), new Graph());
 			Console.WriteLine("");
 		}
 
@@ -59,23 +59,26 @@ namespace MMITest
 		/// Tiefensuche
 		/// </summary>
 		/// <param name="node">Node.</param>
-		public void Tiefensuche(Node node)
+		private List<Node> Tiefensuche(Node node, Graph primGraph)
 		{
 			// Knoten initialisiert mit -1, also muss der counter  bei 1 starten
 			int counter = 1;
 			// Tiefensuche (node, counter);
-			foreach (Node n in NodeList)
+			List<Node> nodeList = new List<Node>();
+			nodeList.Add (new Node(node.ID));
+			foreach (Node n in primGraph.NodeList)
 			{
 				if (n.ComponentCount == -1)
 				{
-					Console.WriteLine("Berechne Komponente {0}", counter);
-					Console.WriteLine("Start Node {0}", n.ID);
+					// Console.WriteLine("Berechne Komponente {0}", counter);
+					// Console.WriteLine("Start Node {0}", n.ID);
 					ComponentsList.Add(new List<Node>());
-					Tiefensuche(n, counter);
+					Tiefensuche(n, counter, nodeList, primGraph);
 					counter++;
 
 				}
 			}
+			return nodeList;
 		}
 
 		/// <summary>
@@ -83,22 +86,24 @@ namespace MMITest
 		/// </summary>
 		/// <param name="node">Node.</param>
 		/// <param name="counter">Counter.</param>
-		private void Tiefensuche(Node node, int counter)
+		private void Tiefensuche(Node node, int counter, List<Node> nodeList, Graph primGraph)
 		{
 			node.IsVisited = true;
+			// nodeList.Add(new Node(node.ID));
 			node.ComponentCount = counter;
 			ComponentsList[counter - 1].Add(node);
-			Console.WriteLine("Current Node: {0}", node.ID);
+			// Console.WriteLine("Current Node: {0}", node.ID);
 			foreach (Edge e in node.Edges)
 			{
-				Node nextVertice = e.TargetNode;
+				Node nextVertice = primGraph.NodeList.Where(n => n.ID == e.TargetNode.ID).First();
 				if (nextVertice.ComponentCount == -1)
 				{
-					Tiefensuche(nextVertice, counter);
+					nodeList.Add (new Node(nextVertice.ID));
+					Tiefensuche(nextVertice, counter, nodeList, primGraph);
 				}
 			}
 		}
-
+			
 		#endregion
 
 		#region Breitensuche
@@ -194,14 +199,15 @@ namespace MMITest
         /// <summary>
         /// Berechnet den Algorithmus von Prim
         /// </summary>
-        private List<Node> PrimReturn(Node startNode)
+		private Graph PrimReturn(Node startNode)
         {
             Reset();
 
-            List<Node> primNodeList = new List<Node>();
+			Graph primGraph = new Graph ();
+            // List<Node> primNodeList = new List<Node>();
             for (int i = 0; i < NodeList.Count(); i++)
             {
-                primNodeList.Add(new Node(i));
+                primGraph.NodeList.Add(new Node(i));
             }
             List<Edge> edgeList = NodeList.SelectMany(node => node.Edges).OrderBy(edge => edge.Weight).ToList();
             startNode.IsVisited = true;
@@ -214,10 +220,10 @@ namespace MMITest
                 Edge e = edgeList.Where(edge => edge.SourceNode.IsVisited && !edge.TargetNode.IsVisited).First();
                 e.TargetNode.IsVisited = true;
                 primWeight += e.Weight;
-                primNodeList[e.SourceNode.ID].Edges.Add(e);
+                primGraph.NodeList[e.SourceNode.ID].Edges.Add(e);
                 edgeList.Remove(e);
             }
-            return primNodeList;
+            return primGraph;
             
         }
 
@@ -260,45 +266,82 @@ namespace MMITest
 
         #region Nächster Nachbar
 
-        public Dictionary<Node, Node> NaechsterNachbar(Node startKnoten)
-        {
-            Reset();
-            // Schritt 1: : Wähle einen beliebigen Knoten als Startknoten v
-            startKnoten.IsVisited = true;
-            double weight = 0.0;
-            Dictionary<Node, Node> hamiltonKreis = new Dictionary<Node, Node>();
-            // Damit Startknoten nicht überschrieben wird
-            Node nextNode = startKnoten;
-            while (NodeList.Where(n => n.IsVisited == false).Any())
-            {
-                // Schritt 2: : Ermittle die niedrigste Kante, welche den aktuellen Knoten v mit einem
-                // unbesuchten Knoten vu verbindet.
-                Edge minEdge = nextNode.Edges.ToList().OrderBy(e => e.Weight).Where(e => e.TargetNode.IsVisited == false).First();
-                weight += minEdge.Weight;
-                // Schritt 3: : Setze v = vu                
-                hamiltonKreis.Add(nextNode, minEdge.TargetNode);
-                nextNode = minEdge.TargetNode;
-                nextNode.IsVisited = true;
-                // Schritt 4: : Wenn noch nicht alle Knoten besucht wurden gehe wieder zu Schritt 2.
-            }
-            // Schritt 5: : Füge die Kante vom letzten besuchten Knoten zum Startknoten hinzu um
-            // den Kreis zu schließen.
-            hamiltonKreis.Add(nextNode, startKnoten);
-            weight += nextNode.Edges.Where(node => ((node.TargetNode == startKnoten))).First().Weight;  
+		public void NaechsterNachbar(Node startKnoten)
+		{
+			Reset();
+			// Schritt 1: : Wähle einen beliebigen Knoten als Startknoten v
+			startKnoten.IsVisited = true;
+			double weight = 0.0;
+			List<Node> hKreis = new List<Node> ();
 
-			foreach (var n in hamiltonKreis) 
+			Node nextNode = startKnoten; // Damit Startknoten nicht überschrieben wird
+			while (NodeList.Where(n => n.IsVisited == false).Any()) // n mal ist effizienter
 			{
-				Console.Write ("({0}|{1}) ", n.Key.ID, n.Value.ID);
+				// Schritt 2: : Ermittle die niedrigste Kante, welche den aktuellen Knoten v mit einem
+				// unbesuchten Knoten vu verbindet.
+				Edge minEdge = nextNode.Edges.ToList().OrderBy(e => e.Weight).Where(e => e.TargetNode.IsVisited == false).First(); // geht effizienter
+				weight += minEdge.Weight;
+				// Schritt 3: : Setze v = vu                
+				hKreis.Add (new Node(nextNode.ID));
+				hKreis.Last ().Add (minEdge);
+				nextNode = minEdge.TargetNode;
+				nextNode.IsVisited = true;
+				// Schritt 4: : Wenn noch nicht alle Knoten besucht wurden gehe wieder zu Schritt 2.
+			}
+
+			// Schritt 5: : Füge die Kante vom letzten besuchten Knoten zum Startknoten hinzu um den Kreis zu schließen.
+			hKreis.Add(new Node(nextNode.ID));
+			Edge eds = EdgeList.Where(n => n.SourceNode.ID == hKreis.Last().ID && n.TargetNode.ID == hKreis.First().ID).First();
+			hKreis.Last().Add(eds);
+			weight += nextNode.Edges.Where(node => ((node.TargetNode == startKnoten))).First().Weight;  
+
+
+			// Ausgabe
+			foreach (var n in hKreis) 
+			{
+				Console.Write ("({0}|{1}) ", n.Edges.First().SourceNode.ID, n.Edges.First().TargetNode.ID);
 			}
 			Console.WriteLine ();
 			Console.WriteLine("Startknoten: {0}; Distanz: {1}", startKnoten.ID, weight);
-
-            return hamiltonKreis;
-        }
+		}
         #endregion
 
         #region Doppelter Baum
+		// mit prim graph zurück geben und eine tiefensuche durchführen, die die reihenfolge zurück gibt
 
+		public void DoppelterBaum(Node startNode)
+		{
+			// Tiefensuche auf Prim!!
+			Graph primGraph = PrimReturn(startNode);
+			// nlist ist die List der Knoten ohne Kanten aus der Tiefensuche
+			List<Node> nList = Tiefensuche (primGraph.NodeList.First(), primGraph);
+			double weight = 0.0;
+			for (int i = 0; i < nList.Count() - 1; i++) 
+			{
+				Node s	= nList [i];
+				Node t = nList [i+1];
+				// finde richtige Kante in der Nodelist
+				Node tmp = NodeList.Where(n => n.ID == s.ID).First();
+				Edge e = tmp.Edges.Where (n => n.TargetNode.ID == t.ID).First ();
+				s.Add (new Edge(s, t, e.Weight));
+				weight += e.Weight;
+			}
+			Node se = nList.Last();
+			Node te = nList.First();
+			Node temp = NodeList.Where(n => n.ID == se.ID).First();
+			Edge ee = temp.Edges.Where (n => n.SourceNode.ID == se.ID && n.TargetNode.ID == te.ID).First ();
+			se.Add (new Edge(se, te, ee.Weight));
+			weight += ee.Weight;
+
+
+			foreach (Node n in nList) 
+			{
+				Console.Write ("({0}|{1}) ", n.Edges.First().SourceNode.ID, n.Edges.First().TargetNode.ID);
+			}
+			Console.WriteLine ();
+			Console.WriteLine("Distanz: {0}", weight);
+		}
+	/*
         public void DoppelterBaum(Node startKnoten)
         {
             Reset();
@@ -331,34 +374,40 @@ namespace MMITest
 
             // Schritt 4: : Durchlaufe die Euler - Tour von einem Startknoten aus. Falls dabei ein Knoten schon besucht wurde, nehme die Abkürzung zum nächsten unbesuchten Knoten auf der Tour.
             Reset();
-            List<Node> durchlauf = new List<Node>();
+            List<Node> hKreis = new List<Node>();
             startNode = euler.First();
             Node nextNode = startNode;
-            while (durchlauf.Count() < NodeList.Count())
+            while (hKreis.Count() < NodeList.Count())
             {
                 startNode.IsVisited = true;
                 euler.Remove(startNode);
-                durchlauf.Add(new Node(startNode.ID));
+                hKreis.Add(new Node(startNode.ID));
                 if (NodeList.Where(n => n.IsVisited == false).Count() > 0)
                 {
                     nextNode = euler.First(n => n.IsVisited == false);
                     Edge e = startNode.Edges.Where(x => x.TargetNode == nextNode).First();
-                    durchlauf.Last().Add(e);
+                    hKreis.Last().Add(e);
                     e.Visited = true;
                     weight += e.Weight;
                     startNode = nextNode;
-					Console.Write ("({0}|{1}) ", e.SourceNode.ID, e.TargetNode.ID);
                 }
             }
             // Letzte Kante und letztes Gewicht hinzufügen
-            Edge eds = EdgeList.Where(n => n.SourceNode.ID == durchlauf.Last().ID && n.TargetNode.ID == durchlauf.First().ID).First();
-            durchlauf.Last().Add(eds);
-			Console.Write ("({0}|{1}) ", eds.SourceNode.ID, eds.TargetNode.ID);
+            Edge eds = EdgeList.Where(n => n.SourceNode.ID == hKreis.Last().ID && n.TargetNode.ID == hKreis.First().ID).First();
+            hKreis.Last().Add(eds);
+			weight += eds.Weight;
+
+
+			// Ausgabe
+			foreach (var n in hKreis) 
+			{
+				Console.Write ("({0}|{1}) ", n.Edges.First().SourceNode.ID, n.Edges.First().TargetNode.ID);
+			}
 			Console.WriteLine ();
-            weight += eds.Weight;
 			Console.WriteLine("Distanz: {0}", weight);
             
         }
+*/
         #endregion            
 
     }
