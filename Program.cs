@@ -30,8 +30,9 @@ namespace MMITest
             IList<Edge> EdgeList = newGraph.EdgeList;
 
 			Calc newCalculation = new Calc (NodeList, EdgeList);
-			newCalculation.AlleTouren ();
-			newCalculation.BranchAndBond ();
+			// newCalculation.AlleTouren ();
+			// newCalculation.BranchAndBond ();
+            newCalculation.Dijkstra(NodeList.First());
             int a = 0;
 
             

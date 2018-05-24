@@ -506,6 +506,84 @@ namespace MMITest
 
         }
 
-		#endregion
+        #endregion
+
+        #region Dijkstra
+
+        public void Dijkstra(Node s)
+        {
+            // Initialisierung
+            Dictionary<Node, Tuple<double, Node>> kwb = Initialize(s);               
+
+            // Durchführung
+            while (kwb.Any(n => n.Key.IsVisited == false && n.Value.Item1 == FindMin(kwb))) // knoten finden
+            {
+                Node n = kwb.Where(b => b.Key.IsVisited == false && b.Value.Item1 == FindMin(kwb)).First().Key;
+                foreach (Edge e in n.Edges)
+                {
+                    // Aktualisieren wenn nötig
+                    if (kwb[e.TargetNode].Item1 > e.Weight || kwb[e.TargetNode].Item1 < 0)
+                    {
+                        kwb[e.TargetNode] = new Tuple<double, Node>(e.Weight, n);
+                    }
+                    n.IsVisited = true;
+                }
+            }
+            
+        }
+
+
+        private Dictionary<Node, Tuple<double, Node>> Initialize(Node s)
+        {
+            Dictionary<Node, Tuple<double, Node>> kwb = new Dictionary<Node, Tuple<double, Node>>();
+
+            foreach (Node n in NodeList)
+            {
+                kwb.Add(n, new Tuple<double, Node>(double.PositiveInfinity, null));
+            }
+            kwb[s] = new Tuple<double, Node>(0.0, s);
+            return kwb;
+        }
+
+        private double FindMin(Dictionary<Node, Tuple<double, Node>> kwb)
+        {
+            double min = 0.0;           
+            foreach (Node n in kwb.Keys)
+            {
+                    min = kwb[n].Item1 < min ? kwb[n].Item1 : min;
+            }
+            return min;
+        }
+        #endregion
+
+        #region Moore-Bellmann-Ford
+
+
+        public void MooreBellmanFord(Node s)
+        {
+            // Initialisierung
+            Dictionary<Node, Tuple<double, Node>> kwb = Initialize(s);
+
+            // Durchführung
+            for (int i = 0; i < NodeList.Count() - 1; i++)
+            {
+                foreach (Edge  e in NodeList[i].Edges)
+                {
+                    // Aktualisieren wenn nötig
+                    if (kwb[e.TargetNode].Item1 > e.Weight || kwb[e.TargetNode].Item1 < 0)
+                    {
+                        kwb[e.TargetNode] = new Tuple<double, Node>(e.Weight, NodeList[i]);
+                    }
+                }
+                foreach (Edge e in EdgeList)
+                {
+                    if (true)
+                    {
+
+                    }
+                }
+            }
+        }
+        #endregion
     }
 }
