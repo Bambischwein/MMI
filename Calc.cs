@@ -5,11 +5,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MMITest;
+using System;
+using System.Diagnostics;
+using System.Threading;
 
 namespace MMITest
 {
 	public class Calc
 	{
+
+		int _CountOfIterations = 0;
 
 		// Liste der Zusammenhangskomponenten
 		public List<List<Node>> ComponentsList { get; set; }
@@ -266,7 +271,7 @@ namespace MMITest
 
         #region Nächster Nachbar
 
-		public void NaechsterNachbar(Node startKnoten)
+		public double NaechsterNachbar(Node startKnoten)
 		{
 			Reset();
 			// Schritt 1: : Wähle einen beliebigen Knoten als Startknoten v
@@ -297,12 +302,15 @@ namespace MMITest
 
 
 			// Ausgabe
-			foreach (var n in hKreis) 
-			{
-				Console.Write ("({0}|{1}) ", n.Edges.First().SourceNode.ID, n.Edges.First().TargetNode.ID);
-			}
-			Console.WriteLine ();
-			Console.WriteLine("Startknoten: {0}; Distanz: {1}", startKnoten.ID, weight);
+			// foreach (var n in hKreis) 
+			// {
+			// 	Console.Write ("({0}|{1}) ", n.Edges.First().SourceNode.ID, n.Edges.First().TargetNode.ID);
+			// }
+			// Console.WriteLine ();
+			// Console.WriteLine("Startknoten: {0}; Distanz: {1}", startKnoten.ID, weight);
+
+			// return hKreis;
+			return weight;
 		}
         #endregion
 
@@ -334,81 +342,177 @@ namespace MMITest
 			weight += ee.Weight;
 
 
-			foreach (Node n in nList) 
-			{
-				Console.Write ("({0}|{1}) ", n.Edges.First().SourceNode.ID, n.Edges.First().TargetNode.ID);
-			}
-			Console.WriteLine ();
-			Console.WriteLine("Distanz: {0}", weight);
+			// foreach (Node n in nList) 
+			// {
+			// 	Console.Write ("({0}|{1}) ", n.Edges.First().SourceNode.ID, n.Edges.First().TargetNode.ID);
+			// }
+			// Console.WriteLine ();
+			// Console.WriteLine("Distanz: {0}", weight);
+
+
 		}
-	/*
-        public void DoppelterBaum(Node startKnoten)
-        {
-            Reset();
+        #endregion            
 
-            double weight = 0.0;
+		#region Alle Touren 
 
-            // Schritt 1: : Konstruiere einen minimal spannenden Baum T von Kn.
-            List<Node> primMinSpannbaum = PrimReturn(startKnoten);
-
-            // Schritt 2: : Verdopple alle Kanten von T(daraus resultiert ein eulerscher Graph Td).           
-            List<Edge> edgeList = primMinSpannbaum.SelectMany(node => node.Edges).ToList();
-            int tmp = edgeList.Count();
-            for (int i = 0; i < tmp; i++)
-            {
-                edgeList.Add(new Edge(edgeList[i].TargetNode, edgeList[i].SourceNode));
-            }
-
-            // Schritt 3: : Berechne eine Euler - Tour in Td. Wähle Knoten v0 und konstruiere von v0 ausgehend einen Unterkreis K in G, der keine Kante in G zweimal durchläuft
-            Node startNode = edgeList[0].SourceNode;
-            List<Node> euler = new List<Node>();
-            euler.Add(startNode);
-            while (edgeList.Where(n => n.Visited == false).Any())
-            {                
-                Edge e = edgeList.Where(n => n.SourceNode == startNode && n.Visited == false).First();
-                startNode = e.TargetNode;            
-                startNode.IsVisited = true;
-                e.Visited = true;
-                euler.Add(startNode);        
-            }
-
-            // Schritt 4: : Durchlaufe die Euler - Tour von einem Startknoten aus. Falls dabei ein Knoten schon besucht wurde, nehme die Abkürzung zum nächsten unbesuchten Knoten auf der Tour.
-            Reset();
-            List<Node> hKreis = new List<Node>();
-            startNode = euler.First();
-            Node nextNode = startNode;
-            while (hKreis.Count() < NodeList.Count())
-            {
-                startNode.IsVisited = true;
-                euler.Remove(startNode);
-                hKreis.Add(new Node(startNode.ID));
-                if (NodeList.Where(n => n.IsVisited == false).Count() > 0)
-                {
-                    nextNode = euler.First(n => n.IsVisited == false);
-                    Edge e = startNode.Edges.Where(x => x.TargetNode == nextNode).First();
-                    hKreis.Last().Add(e);
-                    e.Visited = true;
-                    weight += e.Weight;
-                    startNode = nextNode;
-                }
-            }
-            // Letzte Kante und letztes Gewicht hinzufügen
-            Edge eds = EdgeList.Where(n => n.SourceNode.ID == hKreis.Last().ID && n.TargetNode.ID == hKreis.First().ID).First();
-            hKreis.Last().Add(eds);
-			weight += eds.Weight;
-
-
-			// Ausgabe
-			foreach (var n in hKreis) 
+		public void AlleTouren()
+		{			
+			Console.WriteLine ("Alle Touren:");
+			// erste optimale Tour finden
+			double maxWeight = NaechsterNachbar (NodeList.First ());
+			List<Node> actGraph = new List<Node> ();
+			double actWeight = 0;
+			List<Node> bestPath = new List<Node> ();
+			Stopwatch stopWatch = new Stopwatch();
+			stopWatch.Start();
+			foreach (var node in NodeList)
 			{
-				Console.Write ("({0}|{1}) ", n.Edges.First().SourceNode.ID, n.Edges.First().TargetNode.ID);
+				actGraph.Add (node);
+				AlleTourenRekursiv (ref maxWeight, actGraph, actWeight, false, ref bestPath);
+				actGraph = new List<Node> ();
+			}
+			stopWatch.Stop ();
+			TimeSpan ts = stopWatch.Elapsed;
+			Console.WriteLine ("Time: {0}: ", ts);
+			Console.WriteLine ("Count: {0}", _CountOfIterations);
+			Console.WriteLine ("Beste Tour mit Gewicht: {0}, ", maxWeight);
+			foreach (var node in bestPath) {
+				Console.Write ("{0} ->", node.ID);
 			}
 			Console.WriteLine ();
-			Console.WriteLine("Distanz: {0}", weight);
-            
-        }
-*/
-        #endregion            
+		}
+
+		private void AlleTourenRekursiv(ref double maxWeight, List<Node> actGraph, double actWeight, bool Ausgabe, ref List<Node> bestPath)
+		{
+			if (actGraph.Count () == NodeList.Count ()) 
+			{
+				actWeight += NodeList.SelectMany (n => n.Edges).ToList().
+					Where (n => n.SourceNode.ID == actGraph.Last ().ID && n.TargetNode.ID == actGraph.First().ID).First().Weight;
+				// bestes Gewicht und besten Graphen aktualisieren
+				if (actWeight < maxWeight) 
+				{
+					maxWeight = actWeight;
+					bestPath = new List<Node> ();
+					foreach (var node in actGraph) 
+					{
+						bestPath.Add(node);	
+					}
+				}
+				// maxWeight = actWeight < maxWeight ? actWeight : maxWeight;
+				// bestPath = actWeight < maxWeight ? actGraph : bestPath;
+				_CountOfIterations++;
+				
+				if (Ausgabe) {
+					Console.WriteLine ("Graph mit Gewicht: {0}, ", actWeight);
+					foreach (var node in actGraph) {
+						Console.Write ("{0} ->", node.ID);
+					}
+					Console.WriteLine ();
+				}
+			} 
+			else 
+			{
+				Node tempNode = actGraph.Last ();
+				foreach (var edge in tempNode.Edges) {
+					if (!actGraph.Contains (edge.TargetNode)) {
+						actWeight += edge.Weight;
+						List<Node> tempGraph = actGraph;
+						tempGraph.Add (edge.TargetNode);
+						// if (actWeight < maxWeight)
+						// {
+							AlleTourenRekursiv (ref maxWeight, tempGraph, actWeight, Ausgabe, ref bestPath);		
+							actWeight -= edge.Weight;
+							actGraph.Remove (actGraph.Last ());		
+						// }
+					}
+				}
+			}
+
+		}
+
+		#endregion
+
+		#region Branch and Bound 
+
+		public void BranchAndBond()
+		{			
+			Console.WriteLine ("Branch and Bound:");
+			// erste optimale Tour finden
+			double maxWeight = 39.0;// NaechsterNachbar (NodeList.First ());
+			_CountOfIterations = 0;
+			List<Node> actGraph = new List<Node> ();
+			double actWeight = 0;
+			List<Node> bestPath = new List<Node> ();
+			Stopwatch stopWatch = new Stopwatch();
+			stopWatch.Start();
+			foreach (var node in NodeList)
+			{
+				actGraph.Add (node);
+				BranchAndBoundRekursiv (ref maxWeight, actGraph, actWeight, false, ref bestPath);
+				actGraph = new List<Node> ();
+			}
+			stopWatch.Stop ();
+			TimeSpan ts = stopWatch.Elapsed;
+			Console.WriteLine ("Time: {0}: ", ts);
+			Console.WriteLine ("Count: {0}", _CountOfIterations);
+			Console.WriteLine ("Beste Tour mit Gewicht: {0}, ", maxWeight);
+			foreach (var node in bestPath) {
+				Console.Write ("{0} ->", node.ID);
+			}
+			Console.WriteLine ();
+		}
+
+		private void BranchAndBoundRekursiv(ref double maxWeight, List<Node> actGraph, double actWeight, bool Ausgabe, ref List<Node> bestPath)
+		{
+			if (actGraph.Count () == NodeList.Count ()) 
+			{
+				actWeight += NodeList.SelectMany (n => n.Edges).ToList().
+					Where (n => n.SourceNode.ID == actGraph.Last ().ID && n.TargetNode.ID == actGraph.First().ID).First().Weight;
+				// bestes Gewicht und besten Graphen aktualisieren
+				if (actWeight < maxWeight) 
+				{
+					maxWeight = actWeight;
+					bestPath = new List<Node> ();
+					foreach (var node in actGraph) 
+					{
+						bestPath.Add(node);	
+					}
+				}
+				// maxWeight = actWeight < maxWeight ? actWeight : maxWeight;
+				// bestPath = actWeight < maxWeight ? actGraph : bestPath;
+				_CountOfIterations++;
+
+				if (Ausgabe) {
+					Console.WriteLine ("Graph mit Gewicht: {0}, ", actWeight);
+					foreach (var node in actGraph) {
+						Console.Write ("{0} ->", node.ID);
+					}
+					Console.WriteLine ();
+				}
+			} 
+			else 
+			{
+				Node tempNode = actGraph.Last ();
+				foreach (var edge in tempNode.Edges) {
+					if (!actGraph.Contains (edge.TargetNode)) {
+						actWeight += edge.Weight;
+						List<Node> tempGraph = actGraph;
+						tempGraph.Add (edge.TargetNode);
+						if (actWeight < maxWeight)
+						{
+							AlleTourenRekursiv (ref maxWeight, tempGraph, actWeight, Ausgabe, ref bestPath);		
+							actWeight -= edge.Weight;
+							actGraph.Remove (actGraph.Last ());		
+						}
+					}
+				}
+			}
+
+		}
+
+		#endregion
+
+
 
     }
 }

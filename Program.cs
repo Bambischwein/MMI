@@ -45,7 +45,7 @@ namespace MMITest
             // newCalculation.Kruskal();
 
 			 // Doppelter Baum
-			newCalculation.DoppelterBaum(NodeList.First());
+			// newCalculation.DoppelterBaum(NodeList.First());
 			/*
             // Nächster Nachbar
 			Console.WriteLine("Naechster Nachbar: ");
@@ -63,6 +63,9 @@ namespace MMITest
 
 
 			*/
+
+			newCalculation.AlleTouren ();
+			newCalculation.BranchAndBond ();
             int a = 0;
 
             
