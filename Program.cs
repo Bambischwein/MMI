@@ -21,49 +21,15 @@ namespace MMITest
             file = "/home/hanna/Desktop/K_10.txt";
 
 #else
-            file = @"C:\Users\Hanna\\MMI\K_12e.txt";
+            file = @"C:\Users\Hanna\\MMI\K_10.txt";
 #endif
 
             // Graph einlesen
             Graph newGraph = new Graph();
            	IList<Node> NodeList = newGraph.ReadKantenListe(file, false);
             IList<Edge> EdgeList = newGraph.EdgeList;
-			//IList<Node> NodeList = newGraph.ReadAdjazenzmatrix(file);
 
 			Calc newCalculation = new Calc (NodeList, EdgeList);
-
-            // Tiefen- und Breitensuche
-            // newCalculation.Breitensuche ();
-            // int compCountBreitensuche = newCalculation.ComponentsList.Count();
-            // newCalculation.Tiefensuche ();
-            // int compCountTiefensuche = newCalculation.ComponentsList.Count(); 
-            // Console.WriteLine ("Anzahl der Zusammenhangskomponenten (Tiefensuche):  {0} ", compCountTiefensuche); 
-            // Console.WriteLine ("Anzahl der Zusammenhangskomponenten (Breitensuche):  {0} ", compCountBreitensuche);   
-
-            // Prim & Kruskal
-            // newCalculation.Prim(NodeList.First());
-            // newCalculation.Kruskal();
-
-			 // Doppelter Baum
-			// newCalculation.DoppelterBaum(NodeList.First());
-			/*
-            // Nächster Nachbar
-			Console.WriteLine("Naechster Nachbar: ");
-            for (int i = 0; i < NodeList.Count(); i++)
-            {
-				newCalculation.NaechsterNachbar(NodeList[i]);
-            }
-			// newCalculation.NaechsterNachbar (NodeList.First ());
-			Console.WriteLine ();
-
-            // Doppelter Baum  
-			Console.WriteLine ("Doppelter Baum: ");
-            newCalculation.DoppelterBaum(NodeList.First());  
-			Console.WriteLine ();
-
-
-			*/
-
 			newCalculation.AlleTouren ();
 			newCalculation.BranchAndBond ();
             int a = 0;

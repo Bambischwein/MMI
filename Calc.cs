@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MMITest;
-using System;
 using System.Diagnostics;
 using System.Threading;
 
@@ -398,12 +397,10 @@ namespace MMITest
 						bestPath.Add(node);	
 					}
 				}
-				// maxWeight = actWeight < maxWeight ? actWeight : maxWeight;
-				// bestPath = actWeight < maxWeight ? actGraph : bestPath;
 				_CountOfIterations++;
 				
 				if (Ausgabe) {
-					Console.WriteLine ("Graph mit Gewicht: {0}, ", actWeight);
+					Console.WriteLine ("Graph mit Gewicht: {0}: ", actWeight);
 					foreach (var node in actGraph) {
 						Console.Write ("{0} ->", node.ID);
 					}
@@ -418,12 +415,9 @@ namespace MMITest
 						actWeight += edge.Weight;
 						List<Node> tempGraph = actGraph;
 						tempGraph.Add (edge.TargetNode);
-						// if (actWeight < maxWeight)
-						// {
 							AlleTourenRekursiv (ref maxWeight, tempGraph, actWeight, Ausgabe, ref bestPath);		
 							actWeight -= edge.Weight;
-							actGraph.Remove (actGraph.Last ());		
-						// }
+							actGraph.Remove (actGraph.Last ());							
 					}
 				}
 			}
@@ -438,7 +432,7 @@ namespace MMITest
 		{			
 			Console.WriteLine ("Branch and Bound:");
 			// erste optimale Tour finden
-			double maxWeight = 39.0;// NaechsterNachbar (NodeList.First ());
+			double maxWeight = NaechsterNachbar (NodeList.First ());
 			_CountOfIterations = 0;
 			List<Node> actGraph = new List<Node> ();
 			double actWeight = 0;
@@ -455,7 +449,7 @@ namespace MMITest
 			TimeSpan ts = stopWatch.Elapsed;
 			Console.WriteLine ("Time: {0}: ", ts);
 			Console.WriteLine ("Count: {0}", _CountOfIterations);
-			Console.WriteLine ("Beste Tour mit Gewicht: {0}, ", maxWeight);
+			Console.WriteLine ("Beste Tour mit Gewicht {0}: ", maxWeight);
 			foreach (var node in bestPath) {
 				Console.Write ("{0} ->", node.ID);
 			}
@@ -464,55 +458,54 @@ namespace MMITest
 
 		private void BranchAndBoundRekursiv(ref double maxWeight, List<Node> actGraph, double actWeight, bool Ausgabe, ref List<Node> bestPath)
 		{
-			if (actGraph.Count () == NodeList.Count ()) 
-			{
-				actWeight += NodeList.SelectMany (n => n.Edges).ToList().
-					Where (n => n.SourceNode.ID == actGraph.Last ().ID && n.TargetNode.ID == actGraph.First().ID).First().Weight;
-				// bestes Gewicht und besten Graphen aktualisieren
-				if (actWeight < maxWeight) 
-				{
-					maxWeight = actWeight;
-					bestPath = new List<Node> ();
-					foreach (var node in actGraph) 
-					{
-						bestPath.Add(node);	
-					}
-				}
-				// maxWeight = actWeight < maxWeight ? actWeight : maxWeight;
-				// bestPath = actWeight < maxWeight ? actGraph : bestPath;
-				_CountOfIterations++;
+            if (actGraph.Count() == NodeList.Count())
+            {
+                actWeight += NodeList.SelectMany(n => n.Edges).ToList().
+                    Where(n => n.SourceNode.ID == actGraph.Last().ID && n.TargetNode.ID == actGraph.First().ID).First().Weight;
+                // bestes Gewicht und besten Graphen aktualisieren
+                if (actWeight < maxWeight)
+                {
+                    maxWeight = actWeight;
+                    bestPath = new List<Node>();
+                    foreach (var node in actGraph)
+                    {
+                        bestPath.Add(node);
+                    }
+                }
+                _CountOfIterations++;
 
-				if (Ausgabe) {
-					Console.WriteLine ("Graph mit Gewicht: {0}, ", actWeight);
-					foreach (var node in actGraph) {
-						Console.Write ("{0} ->", node.ID);
-					}
-					Console.WriteLine ();
-				}
-			} 
-			else 
-			{
-				Node tempNode = actGraph.Last ();
-				foreach (var edge in tempNode.Edges) {
-					if (!actGraph.Contains (edge.TargetNode)) {
-						actWeight += edge.Weight;
-						List<Node> tempGraph = actGraph;
-						tempGraph.Add (edge.TargetNode);
-						if (actWeight < maxWeight)
-						{
-							AlleTourenRekursiv (ref maxWeight, tempGraph, actWeight, Ausgabe, ref bestPath);		
-							actWeight -= edge.Weight;
-							actGraph.Remove (actGraph.Last ());		
-						}
-					}
-				}
-			}
+                if (Ausgabe)
+                {
+                    Console.WriteLine("Graph mit Gewicht: {0}: ", actWeight);
+                    foreach (var node in actGraph)
+                    {
+                        Console.Write("{0} ->", node.ID);
+                    }
+                    Console.WriteLine();
+                }
+            }
+            else
+            {
+                Node tempNode = actGraph.Last();
+                foreach (var edge in tempNode.Edges)
+                {
+                    if (!actGraph.Contains(edge.TargetNode))
+                    {
+                        actWeight += edge.Weight;
+                        List<Node> tempGraph = actGraph;
+                        tempGraph.Add(edge.TargetNode);
+                        if (actWeight < maxWeight)
+                        {
+                            BranchAndBoundRekursiv(ref maxWeight, tempGraph, actWeight, Ausgabe, ref bestPath);
+                        }
+                        actWeight -= edge.Weight;
+                        actGraph.Remove(actGraph.Last());
+                    }
+                }
+            }
 
-		}
+        }
 
 		#endregion
-
-
-
     }
 }
