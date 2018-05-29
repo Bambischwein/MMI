@@ -2,15 +2,17 @@
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
   <MonoDevelop.Ide.Workbench ActiveDocument="Calc.cs">
     <Files>
-      <File FileName="Program.cs" Line="1" Column="1" />
-      <File FileName="Graph.cs" Line="118" Column="57" />
-      <File FileName="Node.cs" Line="37" Column="13" />
+      <File FileName="Program.cs" Line="29" Column="71" />
+      <File FileName="Graph.cs" Line="1" Column="1" />
+      <File FileName="Node.cs" Line="1" Column="1" />
       <File FileName="Edge.cs" Line="1" Column="1" />
-      <File FileName="Calc.cs" Line="316" Column="16" />
+      <File FileName="Calc.cs" Line="528" Column="15" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
-    <BreakpointStore />
+    <BreakpointStore>
+      <Breakpoint file="/home/hanna/MonoTest/MMI/MMI/Calc.cs" line="535" column="10" />
+    </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />
 </Properties>

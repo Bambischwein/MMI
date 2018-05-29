@@ -18,7 +18,7 @@ namespace MMITest
 
             // BS unterscheidung
 #if __MonoCS__
-            file = "/home/hanna/Desktop/K_10.txt";
+            file = "/home/hanna/Desktop/Wege1.txt";
 
 #else
             file = @"C:\Users\Hanna\\MMI\K_10.txt";
@@ -26,16 +26,13 @@ namespace MMITest
 
             // Graph einlesen
             Graph newGraph = new Graph();
-           	IList<Node> NodeList = newGraph.ReadKantenListe(file, false);
+           	IList<Node> NodeList = newGraph.ReadKantenListe(file, true);
             IList<Edge> EdgeList = newGraph.EdgeList;
 
 			Calc newCalculation = new Calc (NodeList, EdgeList);
-			// newCalculation.AlleTouren ();
-			// newCalculation.BranchAndBond ();
-            newCalculation.Dijkstra(NodeList.First());
+			newCalculation.Dijkstra(NodeList.First());
+			// newCalculation.MooreBellmanFord(NodeList.First();
             int a = 0;
-
-            
           }
     }
 }

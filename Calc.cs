@@ -360,7 +360,8 @@ namespace MMITest
 			// erste optimale Tour finden
 			double maxWeight = NaechsterNachbar (NodeList.First ());
 			List<Node> actGraph = new List<Node> ();
-			double actWeight = 0;
+			double actWeight = 0.0;
+			_CountOfIterations = 0;
 			List<Node> bestPath = new List<Node> ();
 			Stopwatch stopWatch = new Stopwatch();
 			stopWatch.Start();
@@ -371,10 +372,11 @@ namespace MMITest
 				actGraph = new List<Node> ();
 			}
 			stopWatch.Stop ();
+			// Ausgabe
 			TimeSpan ts = stopWatch.Elapsed;
 			Console.WriteLine ("Time: {0}: ", ts);
 			Console.WriteLine ("Count: {0}", _CountOfIterations);
-			Console.WriteLine ("Beste Tour mit Gewicht: {0}, ", maxWeight);
+			Console.WriteLine ("Beste Tour mit Gewicht {0}: ", maxWeight);
 			foreach (var node in bestPath) {
 				Console.Write ("{0} ->", node.ID);
 			}
@@ -383,6 +385,7 @@ namespace MMITest
 
 		private void AlleTourenRekursiv(ref double maxWeight, List<Node> actGraph, double actWeight, bool Ausgabe, ref List<Node> bestPath)
 		{
+			// Wenn Tour vollständig:
 			if (actGraph.Count () == NodeList.Count ()) 
 			{
 				actWeight += NodeList.SelectMany (n => n.Edges).ToList().
@@ -398,7 +401,7 @@ namespace MMITest
 					}
 				}
 				_CountOfIterations++;
-				
+				// Ausgabe
 				if (Ausgabe) {
 					Console.WriteLine ("Graph mit Gewicht: {0}: ", actWeight);
 					foreach (var node in actGraph) {
@@ -413,11 +416,10 @@ namespace MMITest
 				foreach (var edge in tempNode.Edges) {
 					if (!actGraph.Contains (edge.TargetNode)) {
 						actWeight += edge.Weight;
-						List<Node> tempGraph = actGraph;
-						tempGraph.Add (edge.TargetNode);
-							AlleTourenRekursiv (ref maxWeight, tempGraph, actWeight, Ausgabe, ref bestPath);		
-							actWeight -= edge.Weight;
-							actGraph.Remove (actGraph.Last ());							
+						actGraph.Add (edge.TargetNode);
+						AlleTourenRekursiv (ref maxWeight, actGraph, actWeight, Ausgabe, ref bestPath);		
+						actWeight -= edge.Weight;
+						actGraph.Remove (actGraph.Last ());							
 					}
 				}
 			}
@@ -435,7 +437,7 @@ namespace MMITest
 			double maxWeight = NaechsterNachbar (NodeList.First ());
 			_CountOfIterations = 0;
 			List<Node> actGraph = new List<Node> ();
-			double actWeight = 0;
+			double actWeight = 0.0;
 			List<Node> bestPath = new List<Node> ();
 			Stopwatch stopWatch = new Stopwatch();
 			stopWatch.Start();
@@ -484,73 +486,76 @@ namespace MMITest
                     Console.WriteLine();
                 }
             }
-            else
-            {
-                Node tempNode = actGraph.Last();
-                foreach (var edge in tempNode.Edges)
-                {
-                    if (!actGraph.Contains(edge.TargetNode))
-                    {
-                        actWeight += edge.Weight;
-                        List<Node> tempGraph = actGraph;
-                        tempGraph.Add(edge.TargetNode);
-                        if (actWeight < maxWeight)
-                        {
-                            BranchAndBoundRekursiv(ref maxWeight, tempGraph, actWeight, Ausgabe, ref bestPath);
-                        }
-                        actWeight -= edge.Weight;
-                        actGraph.Remove(actGraph.Last());
-                    }
-                }
-            }
 
+			else 
+			{
+				Node tempNode = actGraph.Last ();
+				foreach (var edge in tempNode.Edges) {
+					if (!actGraph.Contains (edge.TargetNode)) {
+						actWeight += edge.Weight;
+						actGraph.Add (edge.TargetNode);
+						if (actWeight < maxWeight) 
+						{
+							AlleTourenRekursiv (ref maxWeight, actGraph, actWeight, Ausgabe, ref bestPath);		
+						}
+						actWeight -= edge.Weight;
+						actGraph.Remove (actGraph.Last ());							
+					}
+				}
+			}
         }
 
         #endregion
 
         #region Dijkstra
 
-        public void Dijkstra(Node s)
+		public Dictionary<Node, Tuple<double, int>> Dijkstra(Node s)
         {
+			Reset ();
             // Initialisierung
-            Dictionary<Node, Tuple<double, Node>> kwb = Initialize(s);               
+			Dictionary<Node, Tuple<double, int>> kwb = Initialize(s);               
 
             // Durchführung
-            while (kwb.Any(n => n.Key.IsVisited == false && n.Value.Item1 == FindMin(kwb))) // knoten finden
+            while (kwb.Any(n => n.Key.IsVisited == false)) // knoten finden
             {
                 Node n = kwb.Where(b => b.Key.IsVisited == false && b.Value.Item1 == FindMin(kwb)).First().Key;
                 foreach (Edge e in n.Edges)
                 {
                     // Aktualisieren wenn nötig
-                    if (kwb[e.TargetNode].Item1 > e.Weight || kwb[e.TargetNode].Item1 < 0)
+					if (kwb[e.TargetNode].Item1 > e.Weight + kwb[n].Item1) // || kwb[e.TargetNode].Item1 < 0)
                     {
-                        kwb[e.TargetNode] = new Tuple<double, Node>(e.Weight, n);
+						double newWeight = kwb [n].Item1 + e.Weight;
+						kwb[e.TargetNode] = new Tuple<double, int>(newWeight, n.ID);
                     }
-                    n.IsVisited = true;
+
                 }
+				n.IsVisited = true;
             }
-            
+			return kwb;
         }
 
 
-        private Dictionary<Node, Tuple<double, Node>> Initialize(Node s)
+		private Dictionary<Node, Tuple<double, int>> Initialize(Node s)
         {
-            Dictionary<Node, Tuple<double, Node>> kwb = new Dictionary<Node, Tuple<double, Node>>();
+			Dictionary<Node, Tuple<double, int>> kwb = new Dictionary<Node, Tuple<double, int>>();
 
             foreach (Node n in NodeList)
             {
-                kwb.Add(n, new Tuple<double, Node>(double.PositiveInfinity, null));
+				kwb.Add(n, new Tuple<double, int>(double.PositiveInfinity, -1));
             }
-            kwb[s] = new Tuple<double, Node>(0.0, s);
+			kwb[s] = new Tuple<double, int>(0.0, s.ID);
             return kwb;
         }
 
-        private double FindMin(Dictionary<Node, Tuple<double, Node>> kwb)
+		private double FindMin(Dictionary<Node, Tuple<double, int>> kwb)
         {
-            double min = 0.0;           
+			double min = double.PositiveInfinity;           
             foreach (Node n in kwb.Keys)
             {
-                    min = kwb[n].Item1 < min ? kwb[n].Item1 : min;
+				if (kwb [n].Item1 < min && n.IsVisited == false)
+				{
+					min = kwb[n].Item1;
+				}
             }
             return min;
         }
@@ -562,7 +567,7 @@ namespace MMITest
         public void MooreBellmanFord(Node s)
         {
             // Initialisierung
-            Dictionary<Node, Tuple<double, Node>> kwb = Initialize(s);
+			Dictionary<Node, Tuple<double, int>> kwb = Initialize(s);
 
             // Durchführung
             for (int i = 0; i < NodeList.Count() - 1; i++)
@@ -572,7 +577,7 @@ namespace MMITest
                     // Aktualisieren wenn nötig
                     if (kwb[e.TargetNode].Item1 > e.Weight || kwb[e.TargetNode].Item1 < 0)
                     {
-                        kwb[e.TargetNode] = new Tuple<double, Node>(e.Weight, NodeList[i]);
+						kwb[e.TargetNode] = new Tuple<double, int>(e.Weight, NodeList[i].ID);
                     }
                 }
                 foreach (Edge e in EdgeList)
