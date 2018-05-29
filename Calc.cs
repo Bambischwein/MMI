@@ -522,10 +522,10 @@ namespace MMITest
                 foreach (Edge e in n.Edges)
                 {
                     // Aktualisieren wenn nötig
-					if (kwb[e.TargetNode].Item1 > e.Weight + kwb[n].Item1) // || kwb[e.TargetNode].Item1 < 0)
+                    if (kwb[e.TargetNode].Item1 > e.Weight + kwb[n].Item1)
                     {
-						double newWeight = kwb [n].Item1 + e.Weight;
-						kwb[e.TargetNode] = new Tuple<double, int>(newWeight, n.ID);
+                        double newWeight = kwb[n].Item1 + e.Weight;
+                        kwb[e.TargetNode] = new Tuple<double, int>(newWeight, n.ID);
                     }
 
                 }
@@ -534,60 +534,62 @@ namespace MMITest
 			return kwb;
         }
 
-
-		private Dictionary<Node, Tuple<double, int>> Initialize(Node s)
+        private double FindMin(Dictionary<Node, Tuple<double, int>> kwb)
         {
-			Dictionary<Node, Tuple<double, int>> kwb = new Dictionary<Node, Tuple<double, int>>();
-
-            foreach (Node n in NodeList)
-            {
-				kwb.Add(n, new Tuple<double, int>(double.PositiveInfinity, -1));
-            }
-			kwb[s] = new Tuple<double, int>(0.0, s.ID);
-            return kwb;
-        }
-
-		private double FindMin(Dictionary<Node, Tuple<double, int>> kwb)
-        {
-			double min = double.PositiveInfinity;           
+            double min = double.PositiveInfinity;
             foreach (Node n in kwb.Keys)
             {
-				if (kwb [n].Item1 < min && n.IsVisited == false)
-				{
-					min = kwb[n].Item1;
-				}
+                if (kwb[n].Item1 < min && n.IsVisited == false)
+                {
+                    min = kwb[n].Item1;
+                }
             }
             return min;
         }
+
         #endregion
+
+        private Dictionary<Node, Tuple<double, int>> Initialize(Node s)
+        {
+            Dictionary<Node, Tuple<double, int>> kwb = new Dictionary<Node, Tuple<double, int>>();
+
+            foreach (Node n in NodeList)
+            {
+                kwb.Add(n, new Tuple<double, int>(double.PositiveInfinity, -1));
+            }
+            kwb[s] = new Tuple<double, int>(0.0, s.ID);
+            return kwb;
+        }
 
         #region Moore-Bellmann-Ford
 
-
-        public void MooreBellmanFord(Node s)
+        public Boolean MooreBellmanFord(Node s, ref Dictionary<Node, Tuple<double, int>> kwb)
         {
             // Initialisierung
-			Dictionary<Node, Tuple<double, int>> kwb = Initialize(s);
-
-            // Durchführung
+			kwb = Initialize(s);
+            s.IsVisited = true;
+            // Durchführung: n - 1 mal
             for (int i = 0; i < NodeList.Count() - 1; i++)
             {
-                foreach (Edge  e in NodeList[i].Edges)
+                foreach (Edge  e in EdgeList)
                 {
                     // Aktualisieren wenn nötig
-                    if (kwb[e.TargetNode].Item1 > e.Weight || kwb[e.TargetNode].Item1 < 0)
+                    if (kwb[e.TargetNode].Item1 > e.Weight + kwb[e.SourceNode].Item1 && e.SourceNode.IsVisited)
                     {
-						kwb[e.TargetNode] = new Tuple<double, int>(e.Weight, NodeList[i].ID);
+                        double newWeight = kwb[e.SourceNode].Item1 + e.Weight;
+                        kwb[e.TargetNode] = new Tuple<double, int>(newWeight, e.SourceNode.ID);
+                        e.TargetNode.IsVisited = true;
                     }
-                }
-                foreach (Edge e in EdgeList)
+                }               
+            }
+            foreach (Edge e in EdgeList)
+            {
+                if (kwb[e.SourceNode].Item1 + e.Weight < kwb[e.TargetNode].Item1)
                 {
-                    if (true)
-                    {
-
-                    }
+                    return false;
                 }
             }
+            return true;
         }
         #endregion
     }
