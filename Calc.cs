@@ -555,9 +555,9 @@ namespace MMITest
 
             foreach (Node n in NodeList)
             {
-                kwb.Add(n, new Tuple<double, int>(double.PositiveInfinity, -1));
+				kwb.Add(n, new Tuple<double, int>(double.PositiveInfinity, -1));
             }
-            kwb[s] = new Tuple<double, int>(0.0, s.ID);
+			kwb [s] = new Tuple<double, int> (0.0, s.ID);
             return kwb;
         }
 
@@ -565,6 +565,7 @@ namespace MMITest
 
         public Boolean MooreBellmanFord(Node s, ref Dictionary<Node, Tuple<double, int>> kwb)
         {
+			Reset ();
             // Initialisierung
 			kwb = Initialize(s);
             s.IsVisited = true;

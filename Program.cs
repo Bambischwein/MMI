@@ -18,7 +18,7 @@ namespace MMITest
 
             // BS unterscheidung
 #if __MonoCS__
-            file = "/home/hanna/Desktop/Wege1.txt";
+            file = "/home/hanna/Desktop/G_1_2.txt";
 
 #else
             file = @"C:\Users\Hanna\\MMI\Wege1.txt";
@@ -26,7 +26,7 @@ namespace MMITest
 
             // Graph einlesen
             Graph newGraph = new Graph();
-           	IList<Node> NodeList = newGraph.ReadKantenListe(file, false);
+			IList<Node> NodeList = newGraph.ReadKantenListe(file, true);
             IList<Edge> EdgeList = newGraph.EdgeList;
 
 			Calc newCalculation = new Calc (NodeList, EdgeList);
@@ -41,7 +41,7 @@ namespace MMITest
             {
                 Console.WriteLine("Der Graph {0} enthält einen negativen Zykel.", file);
             }
-            Dictionary<Node, Tuple<double, int>> kwbD = newCalculation.Dijkstra(NodeList[2]);
+            Dictionary<Node, Tuple<double, int>> kwbD = newCalculation.Dijkstra(NodeList[0]);
             int a = 0;
           }
     }
