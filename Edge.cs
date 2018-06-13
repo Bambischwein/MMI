@@ -42,7 +42,10 @@ namespace MMITest
 
         public double ResidualCapacity
         {
-            get { return Capacity - Flow; }
+            get 
+			{
+				return Capacity - Flow; 
+			}
         }
 
         #endregion

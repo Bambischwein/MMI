@@ -107,7 +107,58 @@ namespace MMITest
 				}
 			}
 		}
-			
+
+
+		/// <summary>
+		/// Tiefensuche
+		/// </summary>
+		/// <param name="node">Node.</param>
+		private List<Node> TiefensucheZiel(Node src, Node trg, Graph primGraph)
+		{
+			// Knoten initialisiert mit -1, also muss der counter  bei 1 starten
+			int counter = 1;
+			// Tiefensuche (node, counter);
+			List<Node> nodeList = new List<Node>();
+			nodeList.Add (new Node(src.ID));
+			foreach (Node n in primGraph.NodeList)
+			{
+				if (n.ComponentCount == -1)
+				{
+					// Console.WriteLine("Berechne Komponente {0}", counter);
+					// Console.WriteLine("Start Node {0}", n.ID);
+					ComponentsList.Add(new List<Node>());
+					TiefensucheZiel(n, trg, counter, nodeList, primGraph);
+					counter++;
+
+				}
+			}
+			return nodeList;
+		}
+
+		/// <summary>
+		/// Tiefensuche
+		/// </summary>
+		/// <param name="node">Node.</param>
+		/// <param name="counter">Counter.</param>
+		private void TiefensucheZiel(Node src, Node trg, int counter, List<Node> nodeList, Graph primGraph)
+		{
+			src.IsVisited = true;
+			// nodeList.Add(new Node(node.ID));
+			src.ComponentCount = counter;
+			ComponentsList[counter - 1].Add(src);
+			// Console.WriteLine("Current Node: {0}", node.ID);
+			foreach (Edge e in src.Edges)
+			{
+				Node nextVertice = primGraph.NodeList.Where(n => n.ID == e.TargetNode.ID).First();
+				if (nextVertice.ComponentCount == -1 && nextVertice != trg)
+				{
+					nodeList.Add (new Node(nextVertice.ID));
+					TiefensucheZiel(nextVertice, trg, counter, nodeList, primGraph);
+				}
+			}
+		}
+
+
 		#endregion
 
 		#region Breitensuche
@@ -533,32 +584,7 @@ namespace MMITest
             }
 			return kwb;
         }
-
-        //private List<Edge> DijkstraEdges(Node s)
-        //{
-        //    Reset();
-        //    // Initialisierung
-        //    List<Edge> kwb = new List<Edge>();
-
-        //    // Durchführung
-        //    while (kwb.Any(n => n.TargetNode.IsVisited == false)) // knoten finden
-        //    {
-        //        Node n = kwb.Where(b => b.TargetNode.IsVisited == false && b.Weight == FindMinEdge(kwb)).First().TargetNode;
-        //        foreach (Edge e in n.Edges)
-        //        {
-        //            // Aktualisieren wenn nötig
-        //            if (e.Item1 > e.Weight + kwb[n].Item1)
-        //            {
-        //                double newWeight = kwb[n].Item1 + e.Weight;
-        //                kwb[e.TargetNode] = new Tuple<double, int>(newWeight, n.ID);
-        //            }
-
-        //        }
-        //        n.IsVisited = true;
-        //    }
-        //    return kwb;
-        //}
-
+			
         private double FindMin(Dictionary<Node, Tuple<double, int>> kwb)
         {
             double min = double.PositiveInfinity;
@@ -571,19 +597,6 @@ namespace MMITest
             }
             return min;
         }
-
-        //private double FindMinEdge(List<Edge> kwb)
-        //{
-        //    double min = double.PositiveInfinity;
-        //    foreach (Edge n in kwb)
-        //    {
-        //        if (n.Weight < min && n.TargetNode.IsVisited == false)
-        //        {
-        //            min = n.Weight;
-        //        }
-        //    }
-        //    return min;
-        //}
 
         #endregion
 
@@ -630,6 +643,28 @@ namespace MMITest
             }
             return true;
         }
+
+		private List<Edge> GetPath(Node src, Node trg, Dictionary<Node, Tuple<double, int>> path)
+		{
+			List<Edge> tmpPath = new List<Edge> ();
+			List<Edge> shortestPath = new List<Edge> ();
+
+			Node n = trg;
+			while (n.ID != src.ID)
+			{
+				Node tmpsrc = path.Keys.Where(g => g.ID == path[n].Item2).First();
+				Edge e = tmpsrc.Edges.Where (v => v.TargetNode == n).First ();
+				// Edge e = n.Edges.Where(u => u.TargetNode.ID == tmpTarget.ID).First();
+				tmpPath.Add(e);
+				n = tmpsrc;	
+			}
+			while (tmpPath.Count () > 0)
+			{
+				shortestPath.Add (tmpPath.Last ());
+				tmpPath.Remove (tmpPath.Last ());
+			}
+			return shortestPath;
+		}
         #endregion
 
         #region max Flüsse
@@ -644,76 +679,86 @@ namespace MMITest
         Schritt 4: Verändern Sie den Fluss 𝑓 entlang des Wegs 𝑝 um 𝛾 ∶= 𝑚𝑖𝑛_𝑒_𝜖_𝑝 𝑢^𝑓(𝑒).
         Schritt 5: Gehen Sie zu Schritt 2.
         */
-        public void FordFulkerson(Node src, Node trg)
+		public double EdmondsKarpMaxFluss(Node src, Node trg)
         {
             // Global: Graph SPDijkstra;
             Reset();
             Console.WriteLine("Ford Fulkerson");
             // Schritt 1: Setzen Sie 𝑓(𝑒) = 0 für alle Kanten 𝑒 𝜖 𝐸.
-            Graph Residualgraph = CreateResidualGraph();
+			Graph residualGraph = CreateResidualGraph();
+			double maxFluss = 0.0;
 
-            Dictionary<Node, Tuple<double, int>> route = Dijkstra(src);
-            while (route.Keys.Any())
+			Dictionary<Node, Tuple<double, int>> d = Dijkstra(src);
+			List<Edge> route = GetPath (src, trg, d);
+			// List<Node> tiefenRoute = TiefensucheZiel (src, trg, residualGraph);
+            while (route.Any())
             {
-            // Schritt 2: Bestimmen Sie 𝐺^𝑓 und 𝑢^𝑓(𝑒).
-                Residualgraph = CreateResidualGraph();
+            	// Schritt 2: Bestimmen Sie 𝐺^𝑓 und 𝑢^𝑓(𝑒).
+				// residualGraph = CreateResidualGraph();
+				double mFluss = minFluss(route);
+				maxFluss += mFluss;
+				CalculateCapacities (residualGraph, route, mFluss);					
 
-            // Schritt 3: Konstruieren Sie einen einfachen(s, t)-Weg 𝑝 in 𝐺^𝑓. Falls keiner existiert: STOPP.
-                route = Dijkstra(src);
-            // Schritt 4: Verändern Sie den Fluss 𝑓 entlang des Wegs 𝑝 um 𝛾 ∶= 𝑚𝑖𝑛_𝑒_𝜖_𝑝 𝑢^𝑓(𝑒).
+            	// Schritt 3: Konstruieren Sie einen einfachen(s, t)-Weg 𝑝 in 𝐺^𝑓. Falls keiner existiert: STOPP.
+				d = Dijkstra(src);
+				route = GetPath(src, trg, d);
+				if (route.Count() <= 0 ) 
+				{
+					return maxFluss;
+				}
+            	// Schritt 4: Verändern Sie den Fluss 𝑓 entlang des Wegs 𝑝 um 𝛾 ∶= 𝑚𝑖𝑛_𝑒_𝜖_𝑝 𝑢^𝑓(𝑒).
+				//?
 
             // Schritt 5: Gehen Sie zu Schritt 2.
             }
+			return maxFluss;
         }
 
+		private double minFluss (List<Edge> route)
+		{
+			double minFluss = double.PositiveInfinity;
+			foreach (var e in route) {
+				if (e.Weight < minFluss) {
+					minFluss = e.Weight;
+				}
+			}
+			return minFluss;
+		}
 
-        /// <summary>
-        /// creates the residual graph
-        /// </summary>
-        /// <returns>BaseGraph residual graph</returns>
-        private Graph CreateResidualGraph()
-        {
-            Dictionary<int, Node> NodeLookup = new Dictionary<int, Node>();
-
-            // Graph ohne Kanten:
-            IList<Node> newNodes = new List<Node>();
-
-            foreach (Node node in NodeList)
-            {
-                Node newNode = new Node(node.ID);
-                newNodes.Add(newNode);
-
-                NodeLookup[node.ID] = newNode;
-                NodeLookup[node.ID].Balance = node.Balance;
-            }
-
-            // Liste aller Edges aus dem Originalgraphen, die noch Kapazität haben, um sie dem Residualgraphen hinzuzufügen
-            List<Edge> Edges = NodeList.SelectMany(node => node.Edges).Where(edge => edge.ResidualCapacity > 0).ToList();
-
-            foreach (Edge e in Edges)
-            {
-                Edge newEdge = new Edge(NodeLookup[e.SourceNode.ID], NodeLookup[e.TargetNode.ID], e.Weight, e.Capacity);
-                newEdge.Flow = e.Flow;
-
-                NodeLookup[e.SourceNode.ID].Add(newEdge);
-            }
-
-            // Reverse Edges für den Flow hinzufügen
-            Edges = NodeList.SelectMany(node => node.Edges).Where(edge => edge.Flow > 0).ToList();
-
-            foreach (Edge e in Edges)
-            {
-                Edge newReverseEdge = new Edge(NodeLookup[e.TargetNode.ID], NodeLookup[e.SourceNode.ID], -e.Weight, e.Flow);
-                newReverseEdge.Flow = 0;
-
-                NodeLookup[e.TargetNode.ID].Add(newReverseEdge);
-            }
+		private void CalculateCapacities(Graph resi, List<Edge> route, double minFluss)
+		{
+			foreach (Node n in resi.NodeList)
+			{
+				foreach (Edge e in n.Edges) 
+				{
+					if (EdgeList.Contains(e))
+					{
+						Edge edge = resi.getEdge (e.SourceNode, e.TargetNode);
+						edge.Capacity -= minFluss;
+						edge.Flow += minFluss;
+						edge = resi.getEdge (e.TargetNode, e.SourceNode);
+						edge.Capacity = minFluss;
+						edge.Flow -= minFluss;
+					}
+				}
+			}		
+		}
 
 
-            return new Graph(newNodes);
-        }
-
-
+		private Graph CreateResidualGraph()
+		{
+			Graph resi = new Graph ();
+			foreach (var n in NodeList) 
+			{
+				resi.NodeList.Add(new Node(n.ID));
+				foreach (var e in NodeList[n.ID].Edges) 
+				{
+					resi.NodeList [n.ID].Add (e);
+					resi.NodeList [n.ID].AddReverse (e);
+				}
+			}
+			return resi;
+		}
 
         #endregion
     }

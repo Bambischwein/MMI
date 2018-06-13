@@ -18,7 +18,7 @@ namespace MMITest
 
             // BS unterscheidung
 #if __MonoCS__
-            file = "/home/hanna/Desktop/G_1_2.txt";
+            file = "/home/hanna/Desktop/Fluss.txt";
 
 #else
             file = @"C:\Users\Hanna\\MMI\Fluss.txt";
@@ -43,7 +43,7 @@ namespace MMITest
             //}
             //Dictionary<Node, Tuple<double, int>> kwbD = newCalculation.Dijkstra(NodeList[0]);
 
-            newCalculation.FordFulkerson(NodeList[0], NodeList[7]);
+			double test = newCalculation.EdmondsKarpMaxFluss(NodeList[0], NodeList[7]);
 
             int a = 0;
           }

@@ -39,7 +39,14 @@ namespace MMITest
 			Edges.Remove (edge);
 		}
 
-
+		public void AddReverse(Edge e)
+		{
+			Node src = e.TargetNode;
+			Node trg = e.SourceNode;
+			Edge newE = new Edge (src, trg, 0.0, 0.0);
+			Edges.Add (newE);
+		}
+			
         #endregion
 
     }

@@ -161,13 +161,22 @@ namespace MMITest
         #endregion
 
         /// <summary>
-        /// Gibt die gesuchte Kante zurück.
+        /// Gibt die gesuchte Kante zurück
         /// </summary>
         /// <param name="edgeList"></param>
         public Edge getEdge(Node src, Node trg)
         {
-
-            return new Edge(src, trg);
+			foreach (Node n in NodeList) 
+			{
+				foreach (Edge e in n.Edges)
+				{
+					if (e.SourceNode == src && e.TargetNode == trg) 
+					{
+						return e;
+					}
+				}
+			}
+			return null;
         }
 
         /// <summary>
