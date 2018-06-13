@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MMITest
 {
@@ -25,6 +23,25 @@ namespace MMITest
         public Graph()
         {
             NodeList = new List<Node>();
+        }
+
+        public Graph(IList<Node> nodes) : this()
+        {
+            NodeList = nodes;
+            try
+            {
+                CalcWeight();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        protected double CalcWeight()
+        {
+            double Weight = NodeList.SelectMany(node => node.Edges).Sum(edge => edge.Weight) / 2.0;
+            return Weight;
         }
 
         #endregion
@@ -144,19 +161,25 @@ namespace MMITest
         #endregion
 
         /// <summary>
-        /// Kopiert eine EdgeList
+        /// Gibt die gesuchte Kante zurück.
         /// </summary>
         /// <param name="edgeList"></param>
-        /// <returns></returns>
-        public List<Edge> CopyEdgeList(List<Edge> edgeList)
+        public Edge getEdge(Node src, Node trg)
         {
-            List<Edge> newList = new List<Edge>();
-            foreach (Edge e in edgeList)
-            {
-                newList.Add(e);
-            }
-            return newList;
 
+            return new Edge(src, trg);
+        }
+
+        /// <summary>
+        /// Gibt alle Kanten in einer Liste zurück
+        /// </summary>
+        /// <param name="edgeList"></param>
+        public IList<Edge> AllEdges
+        {
+            get
+            {
+                return NodeList.SelectMany(node => node.Edges).ToList();
+            }
         }
     }
 }

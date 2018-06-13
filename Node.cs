@@ -8,9 +8,11 @@ namespace MMITest
         #region Public Member
 
         public int ID{ get; set;}
-		public Boolean IsVisited{ get; set;}
-        public IList<Edge> Edges { get; set;}
-        public int ComponentCount { get; set;}
+		public Boolean IsVisited{ get; set; }
+        public IList<Edge> Edges { get; set; }
+        public int ComponentCount { get; set; }
+        public double Balance { get; set; }
+
         #endregion
 
         #region Konstruktor
@@ -36,6 +38,7 @@ namespace MMITest
 		{
 			Edges.Remove (edge);
 		}
+
 
         #endregion
 

@@ -534,6 +534,31 @@ namespace MMITest
 			return kwb;
         }
 
+        //private List<Edge> DijkstraEdges(Node s)
+        //{
+        //    Reset();
+        //    // Initialisierung
+        //    List<Edge> kwb = new List<Edge>();
+
+        //    // Durchführung
+        //    while (kwb.Any(n => n.TargetNode.IsVisited == false)) // knoten finden
+        //    {
+        //        Node n = kwb.Where(b => b.TargetNode.IsVisited == false && b.Weight == FindMinEdge(kwb)).First().TargetNode;
+        //        foreach (Edge e in n.Edges)
+        //        {
+        //            // Aktualisieren wenn nötig
+        //            if (e.Item1 > e.Weight + kwb[n].Item1)
+        //            {
+        //                double newWeight = kwb[n].Item1 + e.Weight;
+        //                kwb[e.TargetNode] = new Tuple<double, int>(newWeight, n.ID);
+        //            }
+
+        //        }
+        //        n.IsVisited = true;
+        //    }
+        //    return kwb;
+        //}
+
         private double FindMin(Dictionary<Node, Tuple<double, int>> kwb)
         {
             double min = double.PositiveInfinity;
@@ -546,6 +571,19 @@ namespace MMITest
             }
             return min;
         }
+
+        //private double FindMinEdge(List<Edge> kwb)
+        //{
+        //    double min = double.PositiveInfinity;
+        //    foreach (Edge n in kwb)
+        //    {
+        //        if (n.Weight < min && n.TargetNode.IsVisited == false)
+        //        {
+        //            min = n.Weight;
+        //        }
+        //    }
+        //    return min;
+        //}
 
         #endregion
 
@@ -593,5 +631,91 @@ namespace MMITest
             return true;
         }
         #endregion
+
+        #region max Flüsse
+
+
+        /*
+         Input: Netzwerk (G, u, s, t).
+        Output: Maximaler Fluss 𝑓.
+        Schritt 1: Setzen Sie 𝑓(𝑒) = 0 für alle Kanten 𝑒 𝜖 𝐸.
+        Schritt 2: Bestimmen Sie 𝐺^𝑓 und 𝑢^𝑓(𝑒).
+        Schritt 3: Konstruieren Sie einen einfachen (s, t)-Weg 𝑝 in 𝐺^𝑓. Falls keiner existiert: STOPP.
+        Schritt 4: Verändern Sie den Fluss 𝑓 entlang des Wegs 𝑝 um 𝛾 ∶= 𝑚𝑖𝑛_𝑒_𝜖_𝑝 𝑢^𝑓(𝑒).
+        Schritt 5: Gehen Sie zu Schritt 2.
+        */
+        public void FordFulkerson(Node src, Node trg)
+        {
+            // Global: Graph SPDijkstra;
+            Reset();
+            Console.WriteLine("Ford Fulkerson");
+            // Schritt 1: Setzen Sie 𝑓(𝑒) = 0 für alle Kanten 𝑒 𝜖 𝐸.
+            Graph Residualgraph = CreateResidualGraph();
+
+            Dictionary<Node, Tuple<double, int>> route = Dijkstra(src);
+            while (route.Keys.Any())
+            {
+            // Schritt 2: Bestimmen Sie 𝐺^𝑓 und 𝑢^𝑓(𝑒).
+                Residualgraph = CreateResidualGraph();
+
+            // Schritt 3: Konstruieren Sie einen einfachen(s, t)-Weg 𝑝 in 𝐺^𝑓. Falls keiner existiert: STOPP.
+                route = Dijkstra(src);
+            // Schritt 4: Verändern Sie den Fluss 𝑓 entlang des Wegs 𝑝 um 𝛾 ∶= 𝑚𝑖𝑛_𝑒_𝜖_𝑝 𝑢^𝑓(𝑒).
+
+            // Schritt 5: Gehen Sie zu Schritt 2.
+            }
+        }
+
+
+        /// <summary>
+        /// creates the residual graph
+        /// </summary>
+        /// <returns>BaseGraph residual graph</returns>
+        private Graph CreateResidualGraph()
+        {
+            Dictionary<int, Node> NodeLookup = new Dictionary<int, Node>();
+
+            // Graph ohne Kanten:
+            IList<Node> newNodes = new List<Node>();
+
+            foreach (Node node in NodeList)
+            {
+                Node newNode = new Node(node.ID);
+                newNodes.Add(newNode);
+
+                NodeLookup[node.ID] = newNode;
+                NodeLookup[node.ID].Balance = node.Balance;
+            }
+
+            // Liste aller Edges aus dem Originalgraphen, die noch Kapazität haben, um sie dem Residualgraphen hinzuzufügen
+            List<Edge> Edges = NodeList.SelectMany(node => node.Edges).Where(edge => edge.ResidualCapacity > 0).ToList();
+
+            foreach (Edge e in Edges)
+            {
+                Edge newEdge = new Edge(NodeLookup[e.SourceNode.ID], NodeLookup[e.TargetNode.ID], e.Weight, e.Capacity);
+                newEdge.Flow = e.Flow;
+
+                NodeLookup[e.SourceNode.ID].Add(newEdge);
+            }
+
+            // Reverse Edges für den Flow hinzufügen
+            Edges = NodeList.SelectMany(node => node.Edges).Where(edge => edge.Flow > 0).ToList();
+
+            foreach (Edge e in Edges)
+            {
+                Edge newReverseEdge = new Edge(NodeLookup[e.TargetNode.ID], NodeLookup[e.SourceNode.ID], -e.Weight, e.Flow);
+                newReverseEdge.Flow = 0;
+
+                NodeLookup[e.TargetNode.ID].Add(newReverseEdge);
+            }
+
+
+            return new Graph(newNodes);
+        }
+
+
+
+        #endregion
     }
 }
+ 
