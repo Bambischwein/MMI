@@ -25,25 +25,6 @@ namespace MMITest
             NodeList = new List<Node>();
         }
 
-        public Graph(IList<Node> nodes) : this()
-        {
-            NodeList = nodes;
-            try
-            {
-                CalcWeight();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-        }
-
-        protected double CalcWeight()
-        {
-            double Weight = NodeList.SelectMany(node => node.Edges).Sum(edge => edge.Weight) / 2.0;
-            return Weight;
-        }
-
         #endregion
 
         #region Einlesen

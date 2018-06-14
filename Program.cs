@@ -21,7 +21,7 @@ namespace MMITest
             file = "/home/hanna/Desktop/Fluss.txt";
 
 #else
-            file = @"C:\Users\Hanna\\MMI\Fluss.txt";
+            file = @"C:\Users\Hanna\\MMI\G_1_2.txt";
 #endif
 
             // Graph einlesen

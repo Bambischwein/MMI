@@ -158,7 +158,6 @@ namespace MMITest
 			}
 		}
 
-
 		#endregion
 
 		#region Breitensuche
@@ -584,7 +583,31 @@ namespace MMITest
             }
 			return kwb;
         }
-			
+
+        private Dictionary<Node, Tuple<double, int>> Dijkstra(Node s, Graph resi)
+        {
+            Reset();
+            // Initialisierung
+            Dictionary<Node, Tuple<double, int>> kwb = Initialize(s, resi);
+
+            // Durchführung
+            while (kwb.Any(n => n.Key.IsVisited == false)) // knoten finden
+            {
+                Node n = kwb.Where(b => b.Key.IsVisited == false && b.Value.Item1 == FindMin(kwb)).First().Key;
+                foreach (Edge e in n.Edges)
+                {
+                    // Aktualisieren wenn nötig
+                    if (kwb[e.TargetNode].Item1 > e.Capacity + kwb[n].Item1)
+                    {
+                        double newWeight = kwb[n].Item1 + e.Capacity;
+                        kwb[e.TargetNode] = new Tuple<double, int>(newWeight, n.ID);
+                    }
+                }
+                n.IsVisited = true;
+            }
+            return kwb;
+        }
+
         private double FindMin(Dictionary<Node, Tuple<double, int>> kwb)
         {
             double min = double.PositiveInfinity;
@@ -609,6 +632,18 @@ namespace MMITest
 				kwb.Add(n, new Tuple<double, int>(double.PositiveInfinity, -1));
             }
 			kwb [s] = new Tuple<double, int> (0.0, s.ID);
+            return kwb;
+        }
+
+        private Dictionary<Node, Tuple<double, int>> Initialize(Node s, Graph resi)
+        {
+            Dictionary<Node, Tuple<double, int>> kwb = new Dictionary<Node, Tuple<double, int>>();
+
+            foreach (Node n in resi.NodeList)
+            {
+                kwb.Add(n, new Tuple<double, int>(double.PositiveInfinity, -1));
+            }
+            kwb[kwb.Where(v => v.Key.ID == s.ID).First().Key] = new Tuple<double, int>(0.0, s.ID);
             return kwb;
         }
 
@@ -650,21 +685,31 @@ namespace MMITest
 			List<Edge> shortestPath = new List<Edge> ();
 
 			Node n = trg;
-			while (n.ID != src.ID)
-			{
-				Node tmpsrc = path.Keys.Where(g => g.ID == path[n].Item2).First();
-				Edge e = tmpsrc.Edges.Where (v => v.TargetNode == n).First ();
-				// Edge e = n.Edges.Where(u => u.TargetNode.ID == tmpTarget.ID).First();
-				tmpPath.Add(e);
-				n = tmpsrc;	
-			}
-			while (tmpPath.Count () > 0)
-			{
-				shortestPath.Add (tmpPath.Last ());
-				tmpPath.Remove (tmpPath.Last ());
-			}
-			return shortestPath;
-		}
+            try
+            {
+
+			    while (n.ID != src.ID)
+			    {
+                    Node tmptrg = path.Keys.Where(w => w.ID == n.ID).First();
+                    int vorgaengerid = path[tmptrg].Item2;
+                    Node tmpsrc = path.Keys.Where(g => g.ID == vorgaengerid).First();
+				    Edge e = tmpsrc.Edges.Where (v => v.TargetNode == tmptrg).First();
+				    tmpPath.Add(e);
+				    n = tmpsrc;	
+			    }
+                while (tmpPath.Count() > 0)
+                {
+                    shortestPath.Add(tmpPath.Last());
+                    tmpPath.Remove(tmpPath.Last());
+                }
+                return shortestPath;
+            }
+            catch (Exception)
+            {
+
+                return new List<Edge>();
+            }
+        }
         #endregion
 
         #region max Flüsse
@@ -681,35 +726,26 @@ namespace MMITest
         */
 		public double EdmondsKarpMaxFluss(Node src, Node trg)
         {
-            // Global: Graph SPDijkstra;
             Reset();
             Console.WriteLine("Ford Fulkerson");
-            // Schritt 1: Setzen Sie 𝑓(𝑒) = 0 für alle Kanten 𝑒 𝜖 𝐸.
-			Graph residualGraph = CreateResidualGraph();
+			Graph residualGraph = InitResidualGraph();
 			double maxFluss = 0.0;
 
-			Dictionary<Node, Tuple<double, int>> d = Dijkstra(src);
-			List<Edge> route = GetPath (src, trg, d);
-			// List<Node> tiefenRoute = TiefensucheZiel (src, trg, residualGraph);
-            while (route.Any())
+            Dictionary<Node, Tuple<double, int>> d = Dijkstra(src, residualGraph);
+            List<Edge> route = GetPath(src, trg, d);
+
+            while (route.Count > 0)
             {
-            	// Schritt 2: Bestimmen Sie 𝐺^𝑓 und 𝑢^𝑓(𝑒).
-				// residualGraph = CreateResidualGraph();
 				double mFluss = minFluss(route);
 				maxFluss += mFluss;
-				CalculateCapacities (residualGraph, route, mFluss);					
+                Console.WriteLine("Max Fluss:{0}.", maxFluss);
+                Console.WriteLine("Update Edges.");
+                CalculateCapacities(residualGraph, route, mFluss);
+                residualGraph = CreateResidualGraph(residualGraph);
 
-            	// Schritt 3: Konstruieren Sie einen einfachen(s, t)-Weg 𝑝 in 𝐺^𝑓. Falls keiner existiert: STOPP.
-				d = Dijkstra(src);
-				route = GetPath(src, trg, d);
-				if (route.Count() <= 0 ) 
-				{
-					return maxFluss;
-				}
-            	// Schritt 4: Verändern Sie den Fluss 𝑓 entlang des Wegs 𝑝 um 𝛾 ∶= 𝑚𝑖𝑛_𝑒_𝜖_𝑝 𝑢^𝑓(𝑒).
-				//?
-
-            // Schritt 5: Gehen Sie zu Schritt 2.
+                d = Dijkstra(src, residualGraph);
+                route = new List<Edge>();
+				route = GetPath(src, trg, d);                
             }
 			return maxFluss;
         }
@@ -717,48 +753,89 @@ namespace MMITest
 		private double minFluss (List<Edge> route)
 		{
 			double minFluss = double.PositiveInfinity;
-			foreach (var e in route) {
-				if (e.Weight < minFluss) {
-					minFluss = e.Weight;
-				}
-			}
+			foreach (var e in route)
+            {
+                minFluss = Math.Min(minFluss, e.Capacity);
+            }
 			return minFluss;
 		}
 
 		private void CalculateCapacities(Graph resi, List<Edge> route, double minFluss)
 		{
-			foreach (Node n in resi.NodeList)
-			{
-				foreach (Edge e in n.Edges) 
-				{
-					if (EdgeList.Contains(e))
-					{
-						Edge edge = resi.getEdge (e.SourceNode, e.TargetNode);
-						edge.Capacity -= minFluss;
-						edge.Flow += minFluss;
-						edge = resi.getEdge (e.TargetNode, e.SourceNode);
-						edge.Capacity = minFluss;
-						edge.Flow -= minFluss;
-					}
-				}
-			}		
+            foreach (Node n in  resi.NodeList)
+            {
+                foreach (Edge e in n.Edges)
+                {
+                    if (route.Contains(e))
+                    {
+                        try
+                        {                        
+                        Edge originalEdge = EdgeList.Where(q => q.SourceNode.ID == e.SourceNode.ID && q.TargetNode.ID == e.TargetNode.ID).First();
+                        // update flow and residual capacity                         
+                        originalEdge.Flow += minFluss;
+                        originalEdge.Capacity -= minFluss;
+                        Console.WriteLine("Update Flow and Capacity of Edge {0} zu {1}. Flow: {2}, Capacity: {3}", e.SourceNode.ID, e.TargetNode.ID, originalEdge.Flow, originalEdge.Capacity);
+                        }
+                        catch (Exception)
+                        {
+                            Edge originalEdge = EdgeList.Where(q => q.SourceNode.ID == e.TargetNode.ID && q.TargetNode.ID == e.SourceNode.ID).First();
+                            originalEdge.Flow -= minFluss;
+                            originalEdge.Capacity += minFluss;
+                        }
+                    }
+                }
+            }
 		}
 
+        private Graph InitResidualGraph()
+        {
+            Graph residualGraph = new Graph();
+            foreach (Node n in NodeList)
+            {
+                residualGraph.NodeList.Add(n);            
+            }
 
-		private Graph CreateResidualGraph()
-		{
-			Graph resi = new Graph ();
-			foreach (var n in NodeList) 
-			{
-				resi.NodeList.Add(new Node(n.ID));
-				foreach (var e in NodeList[n.ID].Edges) 
-				{
-					resi.NodeList [n.ID].Add (e);
-					resi.NodeList [n.ID].AddReverse (e);
-				}
-			}
-			return resi;
-		}
+            return residualGraph;
+        }
+
+        private Graph CreateResidualGraph(Graph resi)
+        {
+            //Liste aller edges mit Kapazität > 0
+            List<Edge> CEdges = NodeList.SelectMany(node => node.Edges).Where(edge => edge.Capacity > 0).ToList();
+
+            //Rückkanten für alle Kanten, die Fluss haben
+            List<Edge> FEdges = EdgeList.Where(edge => edge.Flow > 0).ToList();
+
+            Console.WriteLine("Capacity Edges count: {0}", CEdges.Count);
+
+            resi = new Graph();
+            foreach (Node node in NodeList)
+            {
+                Node newNode = new Node(node.ID);
+                resi.NodeList.Add(newNode);
+            }
+
+            foreach (Edge e in CEdges)
+            {
+                Edge newEdge = new Edge(resi.NodeList[e.SourceNode.ID], resi.NodeList[e.TargetNode.ID], e.Weight, e.Capacity);
+                newEdge.Flow = e.Flow;
+
+                resi.NodeList[e.SourceNode.ID].Add(newEdge);
+            }
+
+            
+            Console.WriteLine("Flow Edges count: {0}", FEdges.Count);
+
+            foreach (Edge e in FEdges)
+            {
+                Edge newReverseEdge = new Edge(resi.NodeList[e.TargetNode.ID], resi.NodeList[e.SourceNode.ID], 0.0, e.Flow);
+                newReverseEdge.Flow = 0;
+
+                resi.NodeList[e.TargetNode.ID].Add(newReverseEdge);
+            }
+
+            return resi;
+        }
 
         #endregion
     }
