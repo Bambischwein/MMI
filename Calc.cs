@@ -226,6 +226,36 @@ namespace MMITest
 
 		}
 
+        private List<Edge> BreitensucheMaxFluss(Node startNode, Node endNode, Graph resi)
+        {
+            Reset();
+
+            List<Edge> tmp = new List<Edge>();
+
+            Queue<Node> Q = new Queue<Node>();
+            Q.Enqueue(startNode);
+            startNode.IsVisited = true;
+            while (Q.Any())
+            {
+                Node currentNode = Q.Dequeue();
+                foreach (var edge in resi.NodeList[currentNode.ID].Edges)
+                {
+                    if (!edge.TargetNode.IsVisited)
+                    {
+                        Q.Enqueue(edge.TargetNode);
+                        tmp.Add(edge);
+                        edge.TargetNode.IsVisited = true;
+                        if (edge.TargetNode.ID == endNode.ID)
+                        {
+                            return tmp;
+                        }
+                    }
+                }
+            }
+            return new List<Edge>();
+        }
+
+
         #endregion
 
         #region Prim
@@ -710,6 +740,33 @@ namespace MMITest
                 return new List<Edge>();
             }
         }
+
+        private List<Edge> GetPath(Node src, Node trg, Graph g, ref List<Edge> route)
+        {
+            List<Edge> shortestPath = new List<Edge>();
+            List<Edge> tmpPath = new List<Edge>();
+
+            try
+            {
+                Node n = trg;
+                while (n.ID != src.ID)
+                {
+                    Edge tmpSrcEdge = route.Where(e => e.TargetNode.ID == n.ID).First();
+                    tmpPath.Add(tmpSrcEdge);
+                    n = tmpSrcEdge.SourceNode;
+                }
+                while (tmpPath.Count() > 0)
+                {
+                    shortestPath.Add(tmpPath.Last());
+                    tmpPath.Remove(tmpPath.Last());
+                }
+            }
+            catch (Exception)
+            {
+            }
+            return shortestPath;
+        }
+
         #endregion
 
         #region max Flüsse
@@ -731,8 +788,11 @@ namespace MMITest
 			Graph residualGraph = InitResidualGraph();
 			double maxFluss = 0.0;
 
-            Dictionary<Node, Tuple<double, int>> d = Dijkstra(src, residualGraph);
-            List<Edge> route = GetPath(src, trg, d);
+            //Dictionary<Node, Tuple<double, int>> d = Dijkstra(src, residualGraph);
+            //List<Edge> route = GetPath(src, trg, d);
+
+            List<Edge> route = BreitensucheMaxFluss(src, trg, residualGraph);
+            route = GetPath(src, trg, residualGraph, ref route);
 
             while (route.Count > 0)
             {
@@ -743,9 +803,12 @@ namespace MMITest
                 CalculateCapacities(residualGraph, route, mFluss);
                 residualGraph = CreateResidualGraph(residualGraph);
 
-                d = Dijkstra(src, residualGraph);
-                route = new List<Edge>();
-				route = GetPath(src, trg, d);                
+                route = BreitensucheMaxFluss(src, trg, residualGraph);
+                route = GetPath(src, trg, residualGraph, ref route);
+
+                // d = Dijkstra(src, residualGraph);
+                // route = new List<Edge>();
+                // route = GetPath(src, trg, d);                
             }
 			return maxFluss;
         }
