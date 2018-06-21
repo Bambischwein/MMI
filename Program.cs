@@ -31,7 +31,7 @@ namespace MMITest
 
             Calc newCalculation = new Calc(NodeList, EdgeList);
 
-			newCalculation.SSP();
+			Console.WriteLine("Minfluss: {0}", newCalculation.SSP());
 
             int a = 0;
           }

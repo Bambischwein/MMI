@@ -914,20 +914,14 @@ namespace MMITest
 
 		#region Minimale Fluesse
 
-		public void SSP()
+		public double SSP()
 		{
             Graph resi = InitCleanResidualGraph();
-
-
             //Console.WriteLine("Original Graph:");
-            //this.EdgeListToString();
-
+            //this.EdgeListToString();        
             //resi = CreateResidualGraph(resi);
             //Console.WriteLine("Residual Graph:");
             //resi.EdgeListToString();
-
-
-
             //Console.WriteLine("Initialisierung:");
 
             // Schritt 1: Setze f(e) und b(v)
@@ -951,6 +945,8 @@ namespace MMITest
 
             IList<Node> SrcList;
             IList<Node> TrgList;
+
+            double minFluss = double.NaN;
             // Schritt 2:  Finde s und t                    
             SrcList = NodeList.Where(n => n.Balance - n.BalanceModified > 0).ToList();
             TrgList = NodeList.Where(n => n.Balance - n.BalanceModified < 0).ToList();
@@ -966,7 +962,7 @@ namespace MMITest
                     Console.WriteLine("Calculating SSP from {0} to {1}", source.ID, sink.ID);
                     MooreBellmanFord(source, ref kwb, resi);                       
                     shortestPath = GetShortestPath(NodeList[source.ID], NodeList[sink.ID], kwb, resi);                    
-                    while (shortestPath.Count() > 0 && SrcList.Contains(source) && TrgList.Contains(sink)) //&& SrcList.Contains(source))
+                    while (shortestPath.Count() > 0 && SrcList.Contains(source) && TrgList.Contains(sink))
                     {
                         printRoute(shortestPath);
                         SetFlowAndBalance(shortestPath);
@@ -982,8 +978,14 @@ namespace MMITest
                     }
                 }
             }
-            double minFluss = EdgeList.Sum(edge => edge.Cost * edge.Flow);
-            Console.WriteLine("MinFluss: {0}", minFluss);
+            foreach (Node n in NodeList)
+            {
+                if (n.Balance != n.BalanceModified)
+                {
+                    return double.NaN;
+                }
+            }
+            return EdgeList.Sum(edge => edge.Cost * edge.Flow);
         }
 
         private void SetFlowAndBalance(List<Edge> shortestPath)
@@ -1000,10 +1002,10 @@ namespace MMITest
                 maxFlow = Math.Min(maxFlow, e.Capacity - e.Flow);
             }
 
-            Console.WriteLine("max flow for this route: {0}", maxFlow);
+            // Console.WriteLine("max flow for this route: {0}", maxFlow);
 
             // Flow updaten
-            Console.WriteLine("Updating edges...");
+            // Console.WriteLine("Updating edges...");
             foreach (Edge e in shortestPath)
             {
                 Edge originalEdge = getEdge(e.SourceNode, e.TargetNode);
@@ -1018,16 +1020,16 @@ namespace MMITest
                     originalEdge.Flow -= maxFlow;
     
                 }
-                originalEdge.ToString();
+                // originalEdge.ToString();
             }
 
             //update modified balance for begin and end of route
-            Console.WriteLine("Updating Nodes...");
+            // Console.WriteLine("Updating Nodes...");
             NodeList.ElementAt(shortestPath.First().SourceNode.ID).BalanceModified += maxFlow;
-            NodeList.ElementAt(shortestPath.First().SourceNode.ID).ToString();
+            // NodeList.ElementAt(shortestPath.First().SourceNode.ID).ToString();
 
             NodeList.ElementAt(shortestPath.Last().TargetNode.ID).BalanceModified -= maxFlow;
-            NodeList.ElementAt(shortestPath.Last().TargetNode.ID).ToString();
+            // NodeList.ElementAt(shortestPath.Last().TargetNode.ID).ToString();
         }
 
         private Edge getEdge(Node src, Node trg)
