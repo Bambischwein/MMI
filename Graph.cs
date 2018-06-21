@@ -98,9 +98,18 @@ namespace MMITest
 			{				
 				for (int i = 1; i < numberOfNodes + 1; i++)
 				{
+#if __MonoCS__
 					balances.Add(Convert.ToDouble(list[i]));
+
+#else
+                    balances.Add(Convert.ToDouble(list[i].Replace(".", ",")));
+#endif
+                    
 				}
 			}
+
+
+
 
             // Knoten erstellen und in Dictionary einfügen
             for (int i = 0; i < numberOfNodes; i++)
@@ -160,11 +169,11 @@ namespace MMITest
 					#endif
 
 
-					NodeList[sourceID].Add(new Edge(NodeList[sourceID], NodeList[targetID], 0.0, weight, cost));
+					NodeList[sourceID].Add(new Edge(NodeList[sourceID], NodeList[targetID], 0.0, cost, weight));
 				}
                 if (!isDirected)
                 {
-					NodeList[targetID].Add(new Edge(NodeList[targetID], NodeList[sourceID], 0.0, weight, cost));
+					NodeList[targetID].Add(new Edge(NodeList[targetID], NodeList[sourceID], 0.0, cost, weight));
                 }
 
             }
@@ -216,6 +225,15 @@ namespace MMITest
 				}
 			}
 		}
+
+
+        public void EdgeListToString()
+        {
+            foreach (Edge e in AllEdges)
+            {
+                e.ToString();
+            }
+        }
 
     }
 }

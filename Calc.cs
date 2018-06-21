@@ -691,7 +691,7 @@ namespace MMITest
         {
             Dictionary<Node, Tuple<double, int>> kwb = new Dictionary<Node, Tuple<double, int>>();
 
-            foreach (Node n in resi.NodeList)
+            foreach (Node n in NodeList)
             {
                 kwb.Add(n, new Tuple<double, int>(double.PositiveInfinity, -1));
             }
@@ -731,29 +731,30 @@ namespace MMITest
             return true;
         }
 
-		private Boolean MooreBellmanFord(Node s, ref Dictionary<Node, Tuple<double, int>> kwb, Graph resi)
-		{
-			Reset ();
-			// Initialisierung
-			kwb = Initialize(s, resi);
-			s.IsVisited = true;
+        private Boolean MooreBellmanFord(Node s, ref Dictionary<Node, Tuple<double, int>> kwb, Graph resi)
+        {
+            Reset();
+            // Initialisierung
+            kwb = Initialize(s, resi);
+            resi.NodeList[s.ID].IsVisited = true;
 			// Durchführung: n - 1 mal
 			for (int i = 0; i < resi.NodeList.Count() - 1; i++)
 			{
-				foreach (Edge  e in EdgeList)
+				foreach (Edge  e in resi.AllEdges)
 				{
-					// Aktualisieren wenn nötig
-					if (kwb[e.TargetNode].Item1 > e.Weight + kwb[e.SourceNode].Item1 && e.SourceNode.IsVisited)
+                    // Aktualisieren wenn nötig
+                    if (kwb.Where(k => k.Key.ID == e.TargetNode.ID).First().Value.Item1 >
+                        e.Cost + kwb.Where(k => k.Key.ID == e.SourceNode.ID).First().Value.Item1 && e.SourceNode.IsVisited)
 					{
-						double newWeight = kwb[e.SourceNode].Item1 + e.Weight;
-						kwb[e.TargetNode] = new Tuple<double, int>(newWeight, e.SourceNode.ID);
+						double newWeight = kwb.Where(k => k.Key.ID == e.SourceNode.ID).First().Value.Item1 + e.Cost;
+						kwb[NodeList.Where(n => n.ID == e.TargetNode.ID).First()] = new Tuple<double, int>(newWeight, e.SourceNode.ID);
 						e.TargetNode.IsVisited = true;
 					}
 				}               
 			}
 			foreach (Edge e in EdgeList)
 			{
-				if (kwb[e.SourceNode].Item1 + e.Weight < kwb[e.TargetNode].Item1)
+				if (kwb[e.SourceNode].Item1 + e.Cost < kwb[e.TargetNode].Item1)
 				{
 					return false;
 				}
@@ -873,7 +874,7 @@ namespace MMITest
         private Graph CreateResidualGraph(Graph resi)
         {
             //Liste aller edges mit Kapazität > 0
-            List<Edge> CEdges = NodeList.SelectMany(node => node.Edges).Where(edge => edge.Capacity > 0).ToList();
+            List<Edge> CEdges = NodeList.SelectMany(node => node.Edges).Where(edge => edge.Capacity > 0 && edge.Flow < edge.Capacity).ToList();
 
             //Rückkanten für alle Kanten, die Fluss haben
             List<Edge> FEdges = EdgeList.Where(edge => edge.Flow > 0).ToList();
@@ -884,12 +885,13 @@ namespace MMITest
             foreach (Node node in NodeList)
             {
                 Node newNode = new Node(node.ID);
+                newNode.Balance = node.Balance;
                 resi.NodeList.Add(newNode);
             }
 
             foreach (Edge e in CEdges)
             {
-                Edge newEdge = new Edge(resi.NodeList[e.SourceNode.ID], resi.NodeList[e.TargetNode.ID], e.Weight, e.Capacity);
+                Edge newEdge = new Edge(resi.NodeList[e.SourceNode.ID], resi.NodeList[e.TargetNode.ID], e.Weight, e.Capacity, e.Cost);
                 newEdge.Flow = e.Flow;
 
                 resi.NodeList[e.SourceNode.ID].Add(newEdge);
@@ -900,7 +902,7 @@ namespace MMITest
 
             foreach (Edge e in FEdges)
             {
-                Edge newReverseEdge = new Edge(resi.NodeList[e.TargetNode.ID], resi.NodeList[e.SourceNode.ID], 0.0, e.Flow);
+                Edge newReverseEdge = new Edge(resi.NodeList[e.TargetNode.ID], resi.NodeList[e.SourceNode.ID], 0.0, e.Flow, -e.Cost);
                 newReverseEdge.Flow = 0;
 
                 resi.NodeList[e.TargetNode.ID].Add(newReverseEdge);
@@ -912,50 +914,156 @@ namespace MMITest
 
 		#region Minimale Fluesse
 
-		public double SSP()
+		public void SSP()
 		{
-			// Schritt 1: Setze f(e) und b(v)
-			Graph resi = InitCleanResidualGraph ();
-			CreateResidualGraph (resi);	
-			foreach (Edge e in resi.AllEdges) 
-			{
-				if (e.Cost >= 0)
-				{
-					e.Flow = 0;
-				}
-				else 
-				{
-					e.Flow = e.Capacity;
-				}
-			}					
-			// Balancen berechnen
-			foreach (Node n in resi.NodeList) 
-			{
-				GetBalance (n, resi);
-			}
-			// Schritt 2:  Finde s und t
+            Graph resi = InitCleanResidualGraph();
 
-			Node tmpSrc = NodeList.Where(n => n.Balance + resi.NodeList[n.ID].Balance > 0).First();
-			tmpSrc = resi.NodeList.Where (n => n.ID == tmpSrc.ID).First ();	
-			List<Edge> tmpEdgeList = BreitensucheMinFluss (tmpSrc, resi);
-			Node tmpTrg = tmpSrc;
-			foreach (Edge e in tmpEdgeList)
-			{
-				Node tmp = e.TargetNode;
 
-				if (NodeList[tmp.ID].Balance - resi.NodeList[tmp.ID].Balance < 0)
-				{
-					tmpTrg = tmp;
-					break;
-				}
-			}
-			Dictionary<Node, Tuple<double, int>> kwb = new Dictionary<Node, Tuple<double, int>> ();
-			MooreBellmanFord (tmpSrc, ref kwb, resi);
+            //Console.WriteLine("Original Graph:");
+            //this.EdgeListToString();
 
-			return 0.0;
-		}
+            //resi = CreateResidualGraph(resi);
+            //Console.WriteLine("Residual Graph:");
+            //resi.EdgeListToString();
 
-		private Graph InitCleanResidualGraph()
+
+
+            //Console.WriteLine("Initialisierung:");
+
+            // Schritt 1: Setze f(e) und b(v)
+            List<Edge> negEdges = NodeList.SelectMany(node => node.Edges).Where(e => e.Cost < 0).ToList();
+            foreach (Edge e in negEdges)
+            {
+                if (e.Cost < 0)
+                {
+                    e.Flow = e.Capacity;
+                    e.SourceNode.BalanceModified += e.Capacity;
+                    e.TargetNode.BalanceModified -= e.Capacity;
+                }
+            }
+
+            //Console.WriteLine("Original Graph:");
+            //this.EdgeListToString();
+
+            resi = CreateResidualGraph(resi);
+            //Console.WriteLine("Residual Graph:");
+            //resi.EdgeListToString();
+
+            IList<Node> SrcList;
+            IList<Node> TrgList;
+            // Schritt 2:  Finde s und t                    
+            SrcList = NodeList.Where(n => n.Balance - n.BalanceModified > 0).ToList();
+            TrgList = NodeList.Where(n => n.Balance - n.BalanceModified < 0).ToList();
+
+
+            // Schritt 3: Kürzesten Weg berechnen
+            Dictionary<Node, Tuple<double, int>> kwb = new Dictionary<Node, Tuple<double, int>>();
+            List<Edge> shortestPath = new List<Edge>();
+            foreach (Node source in SrcList)
+            {
+                foreach (Node sink in TrgList)
+                {
+                    Console.WriteLine("Calculating SSP from {0} to {1}", source.ID, sink.ID);
+                    MooreBellmanFord(source, ref kwb, resi);                       
+                    shortestPath = GetShortestPath(NodeList[source.ID], NodeList[sink.ID], kwb, resi);                    
+                    while (shortestPath.Count() > 0 && SrcList.Contains(source) && TrgList.Contains(sink)) //&& SrcList.Contains(source))
+                    {
+                        printRoute(shortestPath);
+                        SetFlowAndBalance(shortestPath);
+
+                        SrcList = NodeList.Where(n => (n.Balance - n.BalanceModified) > 0).ToList();
+                        TrgList = NodeList.Where(n => (n.Balance - n.BalanceModified) < 0).ToList();
+
+                        resi = CreateResidualGraph(resi);
+
+                        Console.WriteLine("Calculating SSP from {0} to {1}", source.ID, sink.ID);
+                        MooreBellmanFord(source, ref kwb, resi);
+                        shortestPath = GetShortestPath(NodeList[source.ID], NodeList[sink.ID], kwb, resi);
+                    }
+                }
+            }
+            double minFluss = EdgeList.Sum(edge => edge.Cost * edge.Flow);
+            Console.WriteLine("MinFluss: {0}", minFluss);
+        }
+
+        private void SetFlowAndBalance(List<Edge> shortestPath)
+        {
+            double maxFlow = Double.PositiveInfinity;
+            // maximal mögliche Kapazität der route berechnen
+            maxFlow = Math.Min(maxFlow, shortestPath.First().SourceNode.Balance - shortestPath.First().SourceNode.BalanceModified);
+            maxFlow = Math.Min(maxFlow, shortestPath.Last().TargetNode.BalanceModified - shortestPath.Last().TargetNode.Balance);
+
+            foreach (Edge e in shortestPath)
+            {
+                maxFlow = Math.Min(maxFlow, e.Capacity - e.Flow);
+            }
+
+            Console.WriteLine("max flow for this route: {0}", maxFlow);
+
+            // Flow updaten
+            Console.WriteLine("Updating edges...");
+            foreach (Edge e in shortestPath)
+            {
+                Edge originalEdge = getEdge(e.SourceNode, e.TargetNode);
+                if (originalEdge != null)
+                {
+                    originalEdge.Flow += maxFlow;
+                
+                }
+                else //reverse edge in residualgraph
+                {
+                    originalEdge = getEdge(e.TargetNode, e.SourceNode);
+                    originalEdge.Flow -= maxFlow;
+    
+                }
+                originalEdge.ToString();
+            }
+
+            //update modified balance for begin and end of route
+            Console.WriteLine("Updating Nodes...");
+            NodeList.ElementAt(shortestPath.First().SourceNode.ID).BalanceModified += maxFlow;
+            NodeList.ElementAt(shortestPath.First().SourceNode.ID).ToString();
+
+            NodeList.ElementAt(shortestPath.Last().TargetNode.ID).BalanceModified -= maxFlow;
+            NodeList.ElementAt(shortestPath.Last().TargetNode.ID).ToString();
+        }
+
+        private Edge getEdge(Node src, Node trg)
+        {
+            return NodeList.SelectMany(node => node.Edges).Where(edge => edge.SourceNode.ID == src.ID && edge.TargetNode.ID == trg.ID).FirstOrDefault();
+        }
+
+        private List<Edge> GetShortestPath(Node source, Node sink, Dictionary<Node, Tuple<double, int>> kwb, Graph resi)
+        {
+            List<Edge> tmpshortestPath = new List<Edge>();
+            List<Edge> shortestPath = new List<Edge>();
+
+            Node n = sink;
+            try
+            {
+                while (n.ID != source.ID)
+                {
+                    Node tmp = NodeList[kwb[n].Item2];
+                    tmpshortestPath.Add(resi.AllEdges.Where(e => e.SourceNode.ID == tmp.ID && e.TargetNode.ID == n.ID).First());
+                    n = tmp;
+                }
+                while (tmpshortestPath.Count() > 0)
+                {
+                    shortestPath.Add(EdgeList.Where(e => e.SourceNode.ID == tmpshortestPath.Last().SourceNode.ID &&
+                        e.TargetNode.ID == tmpshortestPath.Last().TargetNode.ID).First());
+                    // shortestPath.Add(tmpshortestPath.Last());
+                    tmpshortestPath.Remove(tmpshortestPath.Last());
+                }
+            }
+            catch
+            {
+                return new List<Edge>();
+            }
+            return shortestPath;
+        }
+
+
+        private Graph InitCleanResidualGraph()
 		{
 			Graph residualGraph = new Graph();
 			foreach (Node n in NodeList)
@@ -971,23 +1079,34 @@ namespace MMITest
 			return residualGraph;
 		}
 
-		private void GetBalance(Node n, Graph resi)
-		{			
-			n.Balance = 0.0;
-			foreach (Edge e in resi.AllEdges)
-			{
-				if (e.SourceNode.ID == n.ID) 
-				{
-					n.Balance += e.Flow;
-				}
-				else if (e.TargetNode.ID == n.ID) 
-				{
-					n.Balance -= e.Flow;
-				}
-			}
-		}
+        #endregion
 
-		#endregion
+
+        public void EdgeListToString()
+        {
+            foreach (Edge e in EdgeList)
+            {
+                e.ToString();
+            }
+        }
+
+
+        public void printRoute(List<Edge> list)
+        {
+            if (list.Count() > 0)
+            {
+
+                foreach (Edge e in list)
+                {
+                    Console.Write("{0} -----> ", e.SourceNode.ID);
+                }
+                Console.WriteLine("{0}", list.Last().TargetNode.ID);
+            }
+            else
+            {
+                Console.WriteLine("no path found");
+            }
+        }
     }
 }
  

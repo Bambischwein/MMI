@@ -47,6 +47,19 @@ namespace MMITest
 			Cost = cost;
 		}
 
+        public void ToString()
+        {
+
+            Console.WriteLine("Edge from {0} to {1} with co={2} ca={3} f={4} rc={5}",
+                    SourceNode.ID,
+                    TargetNode.ID,
+                    Cost,
+                    Capacity,
+                    Flow,
+                    (Capacity - Flow));
+
+        }
+
         #endregion
     }
 }

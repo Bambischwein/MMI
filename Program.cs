@@ -21,7 +21,7 @@ namespace MMITest
             file = "/home/hanna/Desktop/KM1.txt";
 
 #else
-            file = @"C:\Users\Hanna\\MMI\G_1_2.txt";
+            file = @"C:\Users\Hanna\\MMI\KMTest.txt";
 #endif
 
             // Graph einlesen
@@ -31,20 +31,7 @@ namespace MMITest
 
             Calc newCalculation = new Calc(NodeList, EdgeList);
 
-
-            //Dictionary<Node, Tuple<double, int>> kwbMBF = new Dictionary<Node, Tuple<double, int>>();
-            //if (newCalculation.MooreBellmanFord(NodeList[0], ref kwbMBF))
-            //{
-            //    Console.WriteLine("Der Graph {0} enthält keinen negativen Zykel.", file);
-            //}
-            //else
-            //{
-            //    Console.WriteLine("Der Graph {0} enthält einen negativen Zykel.", file);
-            //}
-            //Dictionary<Node, Tuple<double, int>> kwbD = newCalculation.Dijkstra(NodeList[0]);
-
-			// Console.WriteLine("Ergebnis Max Fluss: {0}", newCalculation.EdmondsKarpMaxFluss(NodeList[0], NodeList[7]));
-			double minFluss = newCalculation.SSP();
+			newCalculation.SSP();
 
             int a = 0;
           }

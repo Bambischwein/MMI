@@ -30,6 +30,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Graphen", "Graphen", "{D230
 		K_30.txt = K_30.txt
 		K_50.txt = K_50.txt
 		K_70.txt = K_70.txt
+		KM1.txt = KM1.txt
+		KM2.txt = KM2.txt
+		KM3.txt = KM3.txt
+		KM4.txt = KM4.txt
+		KM5.txt = KM5.txt
 	EndProjectSection
 EndProject
 Global

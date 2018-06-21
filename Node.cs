@@ -12,6 +12,7 @@ namespace MMITest
         public IList<Edge> Edges { get; set; }
         public int ComponentCount { get; set; }
 		public double Balance { get; set; }
+        public double BalanceModified { get; set; }
 
         #endregion
 
@@ -24,6 +25,7 @@ namespace MMITest
             Edges = new List<Edge>();
 			ComponentCount = -1;
 			Balance = 0.0;
+            BalanceModified = 0.0;
 		}
 
 		#endregion
@@ -48,6 +50,13 @@ namespace MMITest
 			Edges.Add (newE);
 		}			
 			
+
+        public void ToString()
+        {
+            Console.WriteLine("Node {0} with b={1} and b'={2}", ID,Balance,BalanceModified);
+
+        }
+
         #endregion
 
     }
