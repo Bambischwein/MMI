@@ -21,7 +21,7 @@ namespace MMITest
             file = "/home/hanna/Desktop/KM1.txt";
 
 #else
-            file = @"C:\Users\Hanna\\MMI\KMTest.txt";
+            file = @"C:\Users\Hanna\\MMI\KM2.txt";
 #endif
 
             // Graph einlesen

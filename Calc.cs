@@ -990,8 +990,10 @@ namespace MMITest
         {
             double maxFlow = Double.PositiveInfinity;
             // maximal mögliche Kapazität der route berechnen
-            maxFlow = Math.Min(maxFlow, shortestPath.First().SourceNode.Balance - shortestPath.First().SourceNode.BalanceModified);
-            maxFlow = Math.Min(maxFlow, shortestPath.Last().TargetNode.BalanceModified - shortestPath.Last().TargetNode.Balance);
+            Node source = NodeList.Where(n => n.ID == shortestPath.First().SourceNode.ID).First();
+            Node sink = NodeList.Where(s => s.ID == shortestPath.Last().TargetNode.ID).First();
+            maxFlow = Math.Min(maxFlow, source.Balance - source.BalanceModified);
+            maxFlow = Math.Min(maxFlow, sink.BalanceModified - sink.Balance);
 
             foreach (Edge e in shortestPath)
             {
@@ -1049,7 +1051,7 @@ namespace MMITest
                 }
                 while (tmpshortestPath.Count() > 0)
                 {
-                    shortestPath.Add(EdgeList.Where(e => e.SourceNode.ID == tmpshortestPath.Last().SourceNode.ID &&
+                    shortestPath.Add(resi.AllEdges.Where(e => e.SourceNode.ID == tmpshortestPath.Last().SourceNode.ID &&
                         e.TargetNode.ID == tmpshortestPath.Last().TargetNode.ID).First());
                     // shortestPath.Add(tmpshortestPath.Last());
                     tmpshortestPath.Remove(tmpshortestPath.Last());
