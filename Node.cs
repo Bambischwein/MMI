@@ -11,6 +11,7 @@ namespace MMITest
 		public Boolean IsVisited{ get; set; }
         public IList<Edge> Edges { get; set; }
         public int ComponentCount { get; set; }
+		public double Balance { get; set; }
 
         #endregion
 
@@ -22,6 +23,7 @@ namespace MMITest
             IsVisited = false;
             Edges = new List<Edge>();
 			ComponentCount = -1;
+			Balance = 0.0;
 		}
 
 		#endregion
@@ -44,7 +46,7 @@ namespace MMITest
 			Node trg = e.SourceNode;
 			Edge newE = new Edge (src, trg, 0.0, 0.0);
 			Edges.Add (newE);
-		}
+		}			
 			
         #endregion
 

@@ -18,7 +18,7 @@ namespace MMITest
 
             // BS unterscheidung
 #if __MonoCS__
-            file = "/home/hanna/Desktop/Fluss.txt";
+            file = "/home/hanna/Desktop/KM1.txt";
 
 #else
             file = @"C:\Users\Hanna\\MMI\G_1_2.txt";
@@ -26,7 +26,7 @@ namespace MMITest
 
             // Graph einlesen
             Graph newGraph = new Graph();
-            IList<Node> NodeList = newGraph.ReadKantenListe(file, true);
+			IList<Node> NodeList = newGraph.ReadKantenListe(file, true, true);
             IList<Edge> EdgeList = newGraph.EdgeList;
 
             Calc newCalculation = new Calc(NodeList, EdgeList);
@@ -43,7 +43,8 @@ namespace MMITest
             //}
             //Dictionary<Node, Tuple<double, int>> kwbD = newCalculation.Dijkstra(NodeList[0]);
 
-			double test = newCalculation.EdmondsKarpMaxFluss(NodeList[0], NodeList[7]);
+			// Console.WriteLine("Ergebnis Max Fluss: {0}", newCalculation.EdmondsKarpMaxFluss(NodeList[0], NodeList[7]));
+			double minFluss = newCalculation.SSP();
 
             int a = 0;
           }

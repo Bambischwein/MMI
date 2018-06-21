@@ -12,6 +12,7 @@ namespace MMITest
 		public Node TargetNode { get; set; }
         public double Flow { get; set; }
         public double Capacity { get; set; }
+		public double Cost { get; set; }
 
         #endregion
 
@@ -25,6 +26,7 @@ namespace MMITest
             Visited = false;
             Flow = 0.0;
             Capacity = Weight;
+			Cost = 0.0;
 		}
 
         public Edge(Node sourceNode, Node targetNode, double weight)
@@ -39,6 +41,11 @@ namespace MMITest
         {
             Capacity = capacity;
         }
+		public Edge(Node sourceNode, Node targetNode, double weight, double capacity, double cost)
+			:this(sourceNode, targetNode, weight, capacity)
+		{
+			Cost = cost;
+		}
 
         #endregion
     }

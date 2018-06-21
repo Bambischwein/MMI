@@ -79,7 +79,7 @@ namespace MMITest
         /// </summary>
         /// <param name="path">Path.</param>
         /// <param name="isDirected">isDirected.</param>
-		public IList<Node> ReadKantenListe(String path, Boolean isDirected)
+		public IList<Node> ReadKantenListe(String path, Boolean isDirected, Boolean isCost)
         {                       
             List<string> list = new List<string>();
             string line = String.Empty;
@@ -93,22 +93,41 @@ namespace MMITest
             // Anzahl der Knoten
             int numberOfNodes = Convert.ToInt32(list[0]);
 
+			List<double> balances = new List<double> ();
+			if (isCost)
+			{				
+				for (int i = 1; i < numberOfNodes + 1; i++)
+				{
+					balances.Add(Convert.ToDouble(list[i]));
+				}
+			}
+
             // Knoten erstellen und in Dictionary einfügen
             for (int i = 0; i < numberOfNodes; i++)
             {
                 Node newNode = new Node(i);
 				NodeList.Add(newNode);
+				if (isCost) 
+				{
+					newNode.Balance = balances[i];
+				}
             }
 
             // Daten einlesen und verarbeiten
-            for (int i = 1; i < list.Count; i++)
+			int j = 1;
+			if (isCost) 
+			{
+				j += numberOfNodes;
+			}
+			for (; j < list.Count; j++)
             {
                 // Default Values
                 double weight = 1.0;
+				double cost = 0.0;
                 int sourceID = -1;
                 int targetID = -1;
 
-                string[] elements = list[i].Split('\t');
+                string[] elements = list[j].Split('\t');
                 sourceID = Convert.ToInt32(elements[0]);
                 targetID = Convert.ToInt32(elements[1]);
                 if (elements.Count() == 2)
@@ -126,12 +145,26 @@ namespace MMITest
                     weight = Convert.ToDouble(elements[2].Replace(".", ","));
 #endif
 
-
                     NodeList[sourceID].Add(new Edge(NodeList[sourceID], NodeList[targetID], weight));
                 }
+				else if (elements.Count() == 4)
+				{
+					// Source- und Targetnode verbinden
+					#if __MonoCS__
+					weight = Convert.ToDouble(elements[3]);
+					cost = Convert.ToDouble(elements[2]);
+
+					#else
+					weight = Convert.ToDouble(elements[2].Replace(".", ","));
+					cost = Convert.ToDouble(elements[3].Replace(".", ","));
+					#endif
+
+
+					NodeList[sourceID].Add(new Edge(NodeList[sourceID], NodeList[targetID], 0.0, weight, cost));
+				}
                 if (!isDirected)
                 {
-                    NodeList[targetID].Add(new Edge(NodeList[targetID], NodeList[sourceID], weight));
+					NodeList[targetID].Add(new Edge(NodeList[targetID], NodeList[sourceID], 0.0, weight, cost));
                 }
 
             }
@@ -159,11 +192,7 @@ namespace MMITest
 			}
 			return null;
         }
-
-        /// <summary>
-        /// Gibt alle Kanten in einer Liste zurück
-        /// </summary>
-        /// <param name="edgeList"></param>
+			
         public IList<Edge> AllEdges
         {
             get
@@ -171,5 +200,22 @@ namespace MMITest
                 return NodeList.SelectMany(node => node.Edges).ToList();
             }
         }
+
+		public void GetBalance(Node n)
+		{			
+			n.Balance = 0.0;
+			foreach (Edge e in AllEdges)
+			{
+				if (e.SourceNode.ID == n.ID) 
+				{
+					n.Balance -= e.Flow;
+				}
+				else if (e.TargetNode.ID == n.ID) 
+				{
+					n.Balance += e.Flow;
+				}
+			}
+		}
+
     }
 }

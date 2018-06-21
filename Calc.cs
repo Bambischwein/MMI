@@ -223,7 +223,6 @@ namespace MMITest
 				}
 
 			}
-
 		}
 
         private List<Edge> BreitensucheMaxFluss(Node startNode, Node endNode, Graph resi)
@@ -231,7 +230,6 @@ namespace MMITest
             Reset();
 
             List<Edge> tmp = new List<Edge>();
-
             Queue<Node> Q = new Queue<Node>();
             Q.Enqueue(startNode);
             startNode.IsVisited = true;
@@ -247,6 +245,7 @@ namespace MMITest
                         edge.TargetNode.IsVisited = true;
                         if (edge.TargetNode.ID == endNode.ID)
                         {
+							tmp = GetPath(startNode, endNode, resi, tmp);
                             return tmp;
                         }
                     }
@@ -255,6 +254,29 @@ namespace MMITest
             return new List<Edge>();
         }
 
+		private List<Edge> BreitensucheMinFluss(Node startNode, Graph resi)
+		{
+			Reset();
+
+			List<Edge> tmp = new List<Edge>();
+			Queue<Node> Q = new Queue<Node>();
+			Q.Enqueue(startNode);
+			startNode.IsVisited = true;
+			while (Q.Any())
+			{
+				Node currentNode = Q.Dequeue();
+				foreach (var edge in resi.NodeList[currentNode.ID].Edges)
+				{
+					if (!edge.TargetNode.IsVisited)
+					{
+						Q.Enqueue(edge.TargetNode);
+						tmp.Add(edge);
+						edge.TargetNode.IsVisited = true;
+					}
+				}
+			}
+			return tmp;
+		}
 
         #endregion
 
@@ -593,7 +615,7 @@ namespace MMITest
         {
 			Reset ();
             // Initialisierung
-			Dictionary<Node, Tuple<double, int>> kwb = Initialize(s);               
+			Dictionary<Node, Tuple<double, int>> kwb = new Dictionary<Node, Tuple<double, int>>();// Initialize(s, NodeList);               
 
             // Durchführung
             while (kwb.Any(n => n.Key.IsVisited == false)) // knoten finden
@@ -653,11 +675,11 @@ namespace MMITest
 
         #endregion
 
-        private Dictionary<Node, Tuple<double, int>> Initialize(Node s)
+		public Dictionary<Node, Tuple<double, int>> Initialize(Node s, List<Node> tmpNodeList)
         {
             Dictionary<Node, Tuple<double, int>> kwb = new Dictionary<Node, Tuple<double, int>>();
 
-            foreach (Node n in NodeList)
+            foreach (Node n in tmpNodeList)
             {
 				kwb.Add(n, new Tuple<double, int>(double.PositiveInfinity, -1));
             }
@@ -683,7 +705,7 @@ namespace MMITest
         {
 			Reset ();
             // Initialisierung
-			kwb = Initialize(s);
+			// kwb = Initialize(s, NodeList);
             s.IsVisited = true;
             // Durchführung: n - 1 mal
             for (int i = 0; i < NodeList.Count() - 1; i++)
@@ -709,39 +731,37 @@ namespace MMITest
             return true;
         }
 
-		private List<Edge> GetPath(Node src, Node trg, Dictionary<Node, Tuple<double, int>> path)
+		private Boolean MooreBellmanFord(Node s, ref Dictionary<Node, Tuple<double, int>> kwb, Graph resi)
 		{
-			List<Edge> tmpPath = new List<Edge> ();
-			List<Edge> shortestPath = new List<Edge> ();
-
-			Node n = trg;
-            try
-            {
-
-			    while (n.ID != src.ID)
-			    {
-                    Node tmptrg = path.Keys.Where(w => w.ID == n.ID).First();
-                    int vorgaengerid = path[tmptrg].Item2;
-                    Node tmpsrc = path.Keys.Where(g => g.ID == vorgaengerid).First();
-				    Edge e = tmpsrc.Edges.Where (v => v.TargetNode == tmptrg).First();
-				    tmpPath.Add(e);
-				    n = tmpsrc;	
-			    }
-                while (tmpPath.Count() > 0)
-                {
-                    shortestPath.Add(tmpPath.Last());
-                    tmpPath.Remove(tmpPath.Last());
-                }
-                return shortestPath;
-            }
-            catch (Exception)
-            {
-
-                return new List<Edge>();
-            }
-        }
-
-        private List<Edge> GetPath(Node src, Node trg, Graph g, ref List<Edge> route)
+			Reset ();
+			// Initialisierung
+			kwb = Initialize(s, resi);
+			s.IsVisited = true;
+			// Durchführung: n - 1 mal
+			for (int i = 0; i < resi.NodeList.Count() - 1; i++)
+			{
+				foreach (Edge  e in EdgeList)
+				{
+					// Aktualisieren wenn nötig
+					if (kwb[e.TargetNode].Item1 > e.Weight + kwb[e.SourceNode].Item1 && e.SourceNode.IsVisited)
+					{
+						double newWeight = kwb[e.SourceNode].Item1 + e.Weight;
+						kwb[e.TargetNode] = new Tuple<double, int>(newWeight, e.SourceNode.ID);
+						e.TargetNode.IsVisited = true;
+					}
+				}               
+			}
+			foreach (Edge e in EdgeList)
+			{
+				if (kwb[e.SourceNode].Item1 + e.Weight < kwb[e.TargetNode].Item1)
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+			
+        private List<Edge> GetPath(Node src, Node trg, Graph g, List<Edge> route)
         {
             List<Edge> shortestPath = new List<Edge>();
             List<Edge> tmpPath = new List<Edge>();
@@ -771,7 +791,6 @@ namespace MMITest
 
         #region max Flüsse
 
-
         /*
          Input: Netzwerk (G, u, s, t).
         Output: Maximaler Fluss 𝑓.
@@ -784,31 +803,20 @@ namespace MMITest
 		public double EdmondsKarpMaxFluss(Node src, Node trg)
         {
             Reset();
-            Console.WriteLine("Ford Fulkerson");
+            Console.WriteLine("Calculate Edmons Karp:");
 			Graph residualGraph = InitResidualGraph();
 			double maxFluss = 0.0;
-
-            //Dictionary<Node, Tuple<double, int>> d = Dijkstra(src, residualGraph);
-            //List<Edge> route = GetPath(src, trg, d);
-
             List<Edge> route = BreitensucheMaxFluss(src, trg, residualGraph);
-            route = GetPath(src, trg, residualGraph, ref route);
-
+            
             while (route.Count > 0)
             {
 				double mFluss = minFluss(route);
 				maxFluss += mFluss;
-                Console.WriteLine("Max Fluss:{0}.", maxFluss);
+                Console.WriteLine("Max Fluss: {0}.", maxFluss);
                 Console.WriteLine("Update Edges.");
                 CalculateCapacities(residualGraph, route, mFluss);
                 residualGraph = CreateResidualGraph(residualGraph);
-
-                route = BreitensucheMaxFluss(src, trg, residualGraph);
-                route = GetPath(src, trg, residualGraph, ref route);
-
-                // d = Dijkstra(src, residualGraph);
-                // route = new List<Edge>();
-                // route = GetPath(src, trg, d);                
+                route = BreitensucheMaxFluss(src, trg, residualGraph);                             
             }
 			return maxFluss;
         }
@@ -833,17 +841,18 @@ namespace MMITest
                     {
                         try
                         {                        
-                        Edge originalEdge = EdgeList.Where(q => q.SourceNode.ID == e.SourceNode.ID && q.TargetNode.ID == e.TargetNode.ID).First();
-                        // update flow and residual capacity                         
-                        originalEdge.Flow += minFluss;
-                        originalEdge.Capacity -= minFluss;
-                        Console.WriteLine("Update Flow and Capacity of Edge {0} zu {1}. Flow: {2}, Capacity: {3}", e.SourceNode.ID, e.TargetNode.ID, originalEdge.Flow, originalEdge.Capacity);
+	                        Edge originalEdge = EdgeList.Where(q => q.SourceNode.ID == e.SourceNode.ID && q.TargetNode.ID == e.TargetNode.ID).First();
+	                        // update flow and residual capacity                         
+	                        originalEdge.Flow += minFluss;
+	                        originalEdge.Capacity -= minFluss;
+	                        // Console.WriteLine("Fluss und Kapazität von Kante {0} zu {1}. Fluss: {2}, Kapazität: {3}", e.SourceNode.ID, e.TargetNode.ID, originalEdge.Flow, originalEdge.Capacity);
                         }
                         catch (Exception)
                         {
                             Edge originalEdge = EdgeList.Where(q => q.SourceNode.ID == e.TargetNode.ID && q.TargetNode.ID == e.SourceNode.ID).First();
                             originalEdge.Flow -= minFluss;
                             originalEdge.Capacity += minFluss;
+
                         }
                     }
                 }
@@ -896,11 +905,89 @@ namespace MMITest
 
                 resi.NodeList[e.TargetNode.ID].Add(newReverseEdge);
             }
-
             return resi;
         }
 
         #endregion
+
+		#region Minimale Fluesse
+
+		public double SSP()
+		{
+			// Schritt 1: Setze f(e) und b(v)
+			Graph resi = InitCleanResidualGraph ();
+			CreateResidualGraph (resi);	
+			foreach (Edge e in resi.AllEdges) 
+			{
+				if (e.Cost >= 0)
+				{
+					e.Flow = 0;
+				}
+				else 
+				{
+					e.Flow = e.Capacity;
+				}
+			}					
+			// Balancen berechnen
+			foreach (Node n in resi.NodeList) 
+			{
+				GetBalance (n, resi);
+			}
+			// Schritt 2:  Finde s und t
+
+			Node tmpSrc = NodeList.Where(n => n.Balance + resi.NodeList[n.ID].Balance > 0).First();
+			tmpSrc = resi.NodeList.Where (n => n.ID == tmpSrc.ID).First ();	
+			List<Edge> tmpEdgeList = BreitensucheMinFluss (tmpSrc, resi);
+			Node tmpTrg = tmpSrc;
+			foreach (Edge e in tmpEdgeList)
+			{
+				Node tmp = e.TargetNode;
+
+				if (NodeList[tmp.ID].Balance - resi.NodeList[tmp.ID].Balance < 0)
+				{
+					tmpTrg = tmp;
+					break;
+				}
+			}
+			Dictionary<Node, Tuple<double, int>> kwb = new Dictionary<Node, Tuple<double, int>> ();
+			MooreBellmanFord (tmpSrc, ref kwb, resi);
+
+			return 0.0;
+		}
+
+		private Graph InitCleanResidualGraph()
+		{
+			Graph residualGraph = new Graph();
+			foreach (Node n in NodeList)
+			{
+				Node node = new Node (n.ID);
+				foreach (Edge e in n.Edges) 
+				{
+					node.Add (new Edge (e.SourceNode, e.TargetNode, e.Weight, e.Capacity, e.Cost));
+				}
+				residualGraph.NodeList.Add(node);    
+			}
+
+			return residualGraph;
+		}
+
+		private void GetBalance(Node n, Graph resi)
+		{			
+			n.Balance = 0.0;
+			foreach (Edge e in resi.AllEdges)
+			{
+				if (e.SourceNode.ID == n.ID) 
+				{
+					n.Balance += e.Flow;
+				}
+				else if (e.TargetNode.ID == n.ID) 
+				{
+					n.Balance -= e.Flow;
+				}
+			}
+		}
+
+		#endregion
     }
 }
  
