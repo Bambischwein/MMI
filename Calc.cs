@@ -917,12 +917,6 @@ namespace MMITest
 		public double SSP()
 		{
             Graph resi = InitCleanResidualGraph();
-            //Console.WriteLine("Original Graph:");
-            //this.EdgeListToString();        
-            //resi = CreateResidualGraph(resi);
-            //Console.WriteLine("Residual Graph:");
-            //resi.EdgeListToString();
-            //Console.WriteLine("Initialisierung:");
 
             // Schritt 1: Setze f(e) und b(v)
             List<Edge> negEdges = NodeList.SelectMany(node => node.Edges).Where(e => e.Cost < 0).ToList();
@@ -936,20 +930,11 @@ namespace MMITest
                 }
             }
 
-            //Console.WriteLine("Original Graph:");
-            //this.EdgeListToString();
-
             resi = CreateResidualGraph(resi);
-            //Console.WriteLine("Residual Graph:");
-            //resi.EdgeListToString();
 
-            IList<Node> SrcList;
-            IList<Node> TrgList;
-
-            double minFluss = double.NaN;
             // Schritt 2:  Finde s und t                    
-            SrcList = NodeList.Where(n => n.Balance - n.BalanceModified > 0).ToList();
-            TrgList = NodeList.Where(n => n.Balance - n.BalanceModified < 0).ToList();
+            IList<Node> SrcList = NodeList.Where(n => n.Balance - n.BalanceModified > 0).ToList();
+            IList<Node> TrgList = NodeList.Where(n => n.Balance - n.BalanceModified < 0).ToList();
 
 
             // Schritt 3: Kürzesten Weg berechnen
@@ -1085,7 +1070,127 @@ namespace MMITest
 
         #endregion
 
+        #region cycle canceling
 
+        public double CC()
+        {
+            Graph resi = InitCleanResidualGraph();
+            Dictionary<Node, Tuple<double, int>> kwb = new Dictionary<Node, Tuple<double, int>>();
+            List<Edge> zykel = new List<Edge>();
+            // Schritt 1: B-Fluss suchen, wenn keiner gefunden STOPP
+            // Super-Quelle und Super-Senke einfügen, dann ford-fulkerson anwenden -> edmonds-karp?                  
+            IList<Node> SrcList = NodeList.Where(n => n.Balance > 0).ToList();
+            IList<Node> TrgList = NodeList.Where(n => n.Balance < 0).ToList();
+
+             
+            Node superSource = new Node(NodeList.Count());
+            foreach (Node n in SrcList)
+            {
+                superSource.Add(new Edge(superSource, n, 0.0, n.Balance));
+            }
+            Node superSink = new Node(NodeList.Count());
+            foreach (Node n in TrgList)
+            {
+                n.Add(new Edge(n, superSink, 0.0, -n.Balance));
+            }
+            NodeList.Add(superSource);
+            NodeList.Add(superSink);
+            double initBFlow = EdmondsKarpMaxFluss(superSource, superSink);
+            if (initBFlow <= 0)
+            {
+                return double.NaN;
+            }
+
+            while (true)
+            {
+                // Schritt 2: Residualgraphen bestimmen
+                resi = CreateResidualGraph(resi);
+
+                // Schritt 3: f-augmentierenden Zykel im Residualgraphen mit negativen Kosten bestimmen, sonst STOPP
+                zykel = MooreBellmanFordZykel(superSource, ref kwb, resi);
+                if (zykel.Count() <= 0)
+                {
+                    return double.NaN;
+                }
+
+
+                // Schritt 4: verändern des B-Flusses entlang des Zykels um γ := min u (e) .
+
+                double minResidualCapacity = double.PositiveInfinity;
+                foreach (Edge e in zykel)
+                {
+                    minResidualCapacity = Math.Min(minResidualCapacity, e.Capacity);
+                }
+                // Fluss vermindern IM Residualgraph
+                // f(e) = f(e), falls e nicht in Z
+                // f(e) = f(e) + m, falls e in Z
+                // f(e) = f(e) - m, falls e gegen Z
+
+                foreach (Edge e in resi.AllEdges)
+                {
+                    if (zykel.Contains(e))
+                    {
+                        if (EdgeList.Contains(e))
+                        {
+                            // vorwärtskante
+                            e.Flow += minResidualCapacity;
+                        }
+                        else
+                        {
+                            // rückwärtskante
+                            e.Flow -= minResidualCapacity;
+                        }
+                    }
+                }
+
+                // Schritt 5: Weiter mit Schritt 2
+
+                return 0.0;
+            }
+
+        }
+
+        private List<Edge> GetZykel(Node superSource, Node superSink, Dictionary<Node, Tuple<double, int>> kwb, Graph resi)
+        {
+
+
+            return new List<Edge>();
+        }
+
+        private List<Edge> MooreBellmanFordZykel(Node s, ref Dictionary<Node, Tuple<double, int>> kwb, Graph resi)
+        {
+            Reset();
+            // Initialisierung
+            kwb = Initialize(s, resi);
+            resi.NodeList[s.ID].IsVisited = true;
+            // Durchführung: n - 1 mal
+            for (int i = 0; i < resi.NodeList.Count() - 1; i++)
+            {
+                foreach (Edge e in resi.AllEdges)
+                {
+                    // Aktualisieren wenn nötig
+                    if (kwb.Where(k => k.Key.ID == e.TargetNode.ID).First().Value.Item1 >
+                        e.Cost + kwb.Where(k => k.Key.ID == e.SourceNode.ID).First().Value.Item1 && e.SourceNode.IsVisited)
+                    {
+                        double newWeight = kwb.Where(k => k.Key.ID == e.SourceNode.ID).First().Value.Item1 + e.Cost;
+                        kwb[NodeList.Where(n => n.ID == e.TargetNode.ID).First()] = new Tuple<double, int>(newWeight, e.SourceNode.ID);
+                        e.TargetNode.IsVisited = true;
+                    }
+                }
+            }
+            List<Edge> cycle = new List<Edge>();
+            foreach (Edge e in EdgeList)
+            {
+                if (kwb[e.SourceNode].Item1 + e.Cost < kwb[e.TargetNode].Item1)
+                {
+                    cycle.Add(e);
+
+                    // return true;
+                }
+            }
+            return cycle;
+        }
+        #endregion
         public void EdgeListToString()
         {
             foreach (Edge e in EdgeList)
