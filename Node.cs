@@ -51,7 +51,7 @@ namespace MMITest
 		}			
 			
 
-        public void ToString()
+        public void EToString()
         {
             Console.WriteLine("Node {0} with b={1} and b'={2}", ID,Balance,BalanceModified);
 

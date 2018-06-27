@@ -160,8 +160,8 @@ namespace MMITest
 				{
 					// Source- und Targetnode verbinden
 					#if __MonoCS__
-					weight = Convert.ToDouble(elements[3]);
-					cost = Convert.ToDouble(elements[2]);
+					weight = Convert.ToDouble(elements[2]);
+					cost = Convert.ToDouble(elements[3]);
 
 					#else
 					weight = Convert.ToDouble(elements[2].Replace(".", ","));

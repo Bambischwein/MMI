@@ -21,17 +21,18 @@ namespace MMITest
             file = "/home/hanna/Desktop/KM1.txt";
 
 #else
-            file = @"C:\Users\Hanna\\MMI\KM1.txt";
+            file = @"C:\Users\Hanna\\MMI\KM1txt";
 #endif
 
-            // Graph einlesen
+            // Graph einlese1
             Graph newGraph = new Graph();
 			IList<Node> NodeList = newGraph.ReadKantenListe(file, true, true);
             IList<Edge> EdgeList = newGraph.EdgeList;
 
             Calc newCalculation = new Calc(NodeList, EdgeList);
 
-			Console.WriteLine("Minfluss: {0}", newCalculation.SSP());
+			// Console.WriteLine("Minfluss: {0}", newCalculation.SSP());
+			newCalculation.CC();
 
             int a = 0;
           }

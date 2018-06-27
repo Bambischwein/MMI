@@ -691,7 +691,7 @@ namespace MMITest
         {
             Dictionary<Node, Tuple<double, int>> kwb = new Dictionary<Node, Tuple<double, int>>();
 
-            foreach (Node n in NodeList)
+            foreach (Node n in resi.NodeList)
             {
                 kwb.Add(n, new Tuple<double, int>(double.PositiveInfinity, -1));
             }
@@ -801,11 +801,12 @@ namespace MMITest
         Schritt 4: Verändern Sie den Fluss 𝑓 entlang des Wegs 𝑝 um 𝛾 ∶= 𝑚𝑖𝑛_𝑒_𝜖_𝑝 𝑢^𝑓(𝑒).
         Schritt 5: Gehen Sie zu Schritt 2.
         */
-		public double EdmondsKarpMaxFluss(Node src, Node trg)
+		private double EdmondsKarpMaxFluss(Node src, Node trg, Graph resi)
         {
             Reset();
             Console.WriteLine("Calculate Edmons Karp:");
 			Graph residualGraph = InitResidualGraph();
+			residualGraph = CreateResidualGraph (resi);
 			double maxFluss = 0.0;
             List<Edge> route = BreitensucheMaxFluss(src, trg, residualGraph);
             
@@ -815,10 +816,11 @@ namespace MMITest
 				maxFluss += mFluss;
                 Console.WriteLine("Max Fluss: {0}.", maxFluss);
                 Console.WriteLine("Update Edges.");
-                CalculateCapacities(residualGraph, route, mFluss);
-                residualGraph = CreateResidualGraph(residualGraph);
+                CalculateCapacities(residualGraph, route, mFluss, resi);
+                residualGraph = CreateResidualGraph(resi);
                 route = BreitensucheMaxFluss(src, trg, residualGraph);                             
             }
+			resi = residualGraph;
 			return maxFluss;
         }
 
@@ -832,7 +834,7 @@ namespace MMITest
 			return minFluss;
 		}
 
-		private void CalculateCapacities(Graph resi, List<Edge> route, double minFluss)
+		private void CalculateCapacities(Graph resi, List<Edge> route, double minFluss, Graph superGraph)
 		{
             foreach (Node n in  resi.NodeList)
             {
@@ -842,18 +844,17 @@ namespace MMITest
                     {
                         try
                         {                        
-	                        Edge originalEdge = EdgeList.Where(q => q.SourceNode.ID == e.SourceNode.ID && q.TargetNode.ID == e.TargetNode.ID).First();
+	                        Edge originalEdge = superGraph.AllEdges.Where(q => q.SourceNode.ID == e.SourceNode.ID && q.TargetNode.ID == e.TargetNode.ID).First();
 	                        // update flow and residual capacity                         
 	                        originalEdge.Flow += minFluss;
 	                        originalEdge.Capacity -= minFluss;
-	                        // Console.WriteLine("Fluss und Kapazität von Kante {0} zu {1}. Fluss: {2}, Kapazität: {3}", e.SourceNode.ID, e.TargetNode.ID, originalEdge.Flow, originalEdge.Capacity);
+	                        Console.WriteLine("Fluss und Kapazität von Kante {0} zu {1}. Fluss: {2}, Kapazität: {3}", e.SourceNode.ID, e.TargetNode.ID, originalEdge.Flow, originalEdge.Capacity);
                         }
                         catch (Exception)
-                        {
-                            Edge originalEdge = EdgeList.Where(q => q.SourceNode.ID == e.TargetNode.ID && q.TargetNode.ID == e.SourceNode.ID).First();
-                            originalEdge.Flow -= minFluss;
-                            originalEdge.Capacity += minFluss;
-
+                        {							
+								Edge originalEdge = superGraph.AllEdges.Where(q => q.SourceNode.ID == e.TargetNode.ID && q.TargetNode.ID == e.SourceNode.ID).First();
+								originalEdge.Flow -= minFluss;
+								originalEdge.Capacity += minFluss;
                         }
                     }
                 }
@@ -874,27 +875,27 @@ namespace MMITest
         private Graph CreateResidualGraph(Graph resi)
         {
             //Liste aller edges mit Kapazität > 0
-            List<Edge> CEdges = NodeList.SelectMany(node => node.Edges).Where(edge => edge.Capacity > 0 && edge.Flow < edge.Capacity).ToList();
+			List<Edge> CEdges = resi.NodeList.SelectMany(node => node.Edges).Where(edge => edge.Capacity > 0 ).ToList(); //&& edge.Flow < edge.Capacity).ToList();
 
             //Rückkanten für alle Kanten, die Fluss haben
-            List<Edge> FEdges = EdgeList.Where(edge => edge.Flow > 0).ToList();
+            List<Edge> FEdges = resi.AllEdges.Where(edge => edge.Flow > 0).ToList();
 
             Console.WriteLine("Capacity Edges count: {0}", CEdges.Count);
 
-            resi = new Graph();
-            foreach (Node node in NodeList)
+            Graph residualGraph = new Graph();
+            foreach (Node node in resi.NodeList)
             {
                 Node newNode = new Node(node.ID);
                 newNode.Balance = node.Balance;
-                resi.NodeList.Add(newNode);
+                residualGraph.NodeList.Add(newNode);
             }
 
             foreach (Edge e in CEdges)
             {
-                Edge newEdge = new Edge(resi.NodeList[e.SourceNode.ID], resi.NodeList[e.TargetNode.ID], e.Weight, e.Capacity, e.Cost);
+				Edge newEdge = new Edge(residualGraph.NodeList[e.SourceNode.ID], residualGraph.NodeList[e.TargetNode.ID], e.Weight, e.Capacity, e.Cost);
                 newEdge.Flow = e.Flow;
 
-                resi.NodeList[e.SourceNode.ID].Add(newEdge);
+                residualGraph.NodeList[e.SourceNode.ID].Add(newEdge);
             }
 
             
@@ -902,12 +903,12 @@ namespace MMITest
 
             foreach (Edge e in FEdges)
             {
-                Edge newReverseEdge = new Edge(resi.NodeList[e.TargetNode.ID], resi.NodeList[e.SourceNode.ID], 0.0, e.Flow, -e.Cost);
+                Edge newReverseEdge = new Edge(residualGraph.NodeList[e.TargetNode.ID], residualGraph.NodeList[e.SourceNode.ID], 0.0, e.Flow, -e.Cost);
                 newReverseEdge.Flow = 0;
 
-                resi.NodeList[e.TargetNode.ID].Add(newReverseEdge);
+                residualGraph.NodeList[e.TargetNode.ID].Add(newReverseEdge);
             }
-            return resi;
+            return residualGraph;
         }
 
         #endregion
@@ -918,7 +919,8 @@ namespace MMITest
 		{
             Graph resi = InitCleanResidualGraph();
 
-            // Schritt 1: Setze f(e) und b(v)
+			Console.WriteLine ("Calculate SSP");
+            // Schritt 1: Setze f(e) und b(v)-> finde alle Kanten mit negativen Kosten und laste sie voll aus
             List<Edge> negEdges = NodeList.SelectMany(node => node.Edges).Where(e => e.Cost < 0).ToList();
             foreach (Edge e in negEdges)
             {
@@ -950,6 +952,7 @@ namespace MMITest
                     while (shortestPath.Count() > 0 && SrcList.Contains(source) && TrgList.Contains(sink))
                     {
                         printRoute(shortestPath);
+
                         SetFlowAndBalance(shortestPath);
 
                         SrcList = NodeList.Where(n => (n.Balance - n.BalanceModified) > 0).ToList();
@@ -987,10 +990,10 @@ namespace MMITest
                 maxFlow = Math.Min(maxFlow, e.Capacity - e.Flow);
             }
 
-            // Console.WriteLine("max flow for this route: {0}", maxFlow);
+            Console.WriteLine("max flow for this route: {0}", maxFlow);
 
             // Flow updaten
-            // Console.WriteLine("Updating edges...");
+            Console.WriteLine("Updating flow in edges...");
             foreach (Edge e in shortestPath)
             {
                 Edge originalEdge = getEdge(e.SourceNode, e.TargetNode);
@@ -1009,12 +1012,12 @@ namespace MMITest
             }
 
             //update modified balance for begin and end of route
-            // Console.WriteLine("Updating Nodes...");
+            Console.WriteLine("Updating modified Balances...");
             NodeList.ElementAt(shortestPath.First().SourceNode.ID).BalanceModified += maxFlow;
-            // NodeList.ElementAt(shortestPath.First().SourceNode.ID).ToString();
+            NodeList.ElementAt(shortestPath.First().SourceNode.ID).ToString();
 
             NodeList.ElementAt(shortestPath.Last().TargetNode.ID).BalanceModified -= maxFlow;
-            // NodeList.ElementAt(shortestPath.Last().TargetNode.ID).ToString();
+            NodeList.ElementAt(shortestPath.Last().TargetNode.ID).ToString();
         }
 
         private Edge getEdge(Node src, Node trg)
@@ -1073,29 +1076,35 @@ namespace MMITest
         #region cycle canceling
 
         public double CC()
-        {
-            Graph resi = InitCleanResidualGraph();
+        {            
             Dictionary<Node, Tuple<double, int>> kwb = new Dictionary<Node, Tuple<double, int>>();
             List<Edge> zykel = new List<Edge>();
+			Graph superGraph = InitResidualGraph ();
+
             // Schritt 1: B-Fluss suchen, wenn keiner gefunden STOPP
-            // Super-Quelle und Super-Senke einfügen, dann ford-fulkerson anwenden -> edmonds-karp?                  
+            // Super-Quelle und Super-Senke einfügen, dann ford-fulkerson anwenden                
             IList<Node> SrcList = NodeList.Where(n => n.Balance > 0).ToList();
             IList<Node> TrgList = NodeList.Where(n => n.Balance < 0).ToList();
 
-             
-            Node superSource = new Node(NodeList.Count());
+            Node superSource = new Node(superGraph.NodeList.Count());
             foreach (Node n in SrcList)
             {
-                superSource.Add(new Edge(superSource, n, 0.0, n.Balance));
+                superSource.Add(new Edge(superSource, n, 0.0, n.Balance, 0.0));
+				superGraph.AllEdges.Add(new Edge(superSource, n, 0.0, n.Balance, 0.0));
+				superSource.Balance += n.Balance;
             }
-            Node superSink = new Node(NodeList.Count());
+			superGraph.NodeList.Add(superSource);
+            Node superSink = new Node(superGraph.NodeList.Count());
             foreach (Node n in TrgList)
             {
-                n.Add(new Edge(n, superSink, 0.0, -n.Balance));
-            }
-            NodeList.Add(superSource);
-            NodeList.Add(superSink);
-            double initBFlow = EdmondsKarpMaxFluss(superSource, superSink);
+                n.Add(new Edge(n, superSink, 0.0, -n.Balance, 0.0));
+				superGraph.AllEdges.Add(new Edge(n, superSink, 0.0, -n.Balance, 0.0));
+				superSink.Balance += n.Balance;
+            }		
+            superGraph.NodeList.Add(superSink);
+			// Berechnung des Flusses:
+			Graph superCopy = superGraph;
+			double initBFlow = EdmondsKarpMaxFluss(superSource, superSink, superGraph);
             if (initBFlow <= 0)
             {
                 return double.NaN;
@@ -1104,15 +1113,15 @@ namespace MMITest
             while (true)
             {
                 // Schritt 2: Residualgraphen bestimmen
-                resi = CreateResidualGraph(resi);
+				Graph resi = InitCleanResidualGraph();
+                resi = CreateResidualGraph(superGraph);
 
                 // Schritt 3: f-augmentierenden Zykel im Residualgraphen mit negativen Kosten bestimmen, sonst STOPP
-                zykel = MooreBellmanFordZykel(superSource, ref kwb, resi);
+				zykel = MooreBellmanFordZykel(superSource, ref kwb, resi);
                 if (zykel.Count() <= 0)
                 {
-                    return double.NaN;
+					return EdgeList.Sum(edge => edge.Cost * edge.Flow);
                 }
-
 
                 // Schritt 4: verändern des B-Flusses entlang des Zykels um γ := min u (e) .
 
@@ -1140,12 +1149,10 @@ namespace MMITest
                             // rückwärtskante
                             e.Flow -= minResidualCapacity;
                         }
+						// sonst bleibt so, wie es ist, da e nicht in Z
                     }
                 }
-
                 // Schritt 5: Weiter mit Schritt 2
-
-                return 0.0;
             }
 
         }
