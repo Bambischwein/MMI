@@ -18,6 +18,9 @@ namespace MMITest
 
         #region Constructor
 
+        public Edge()
+        { }
+
         public Edge (Node sourceNode, Node targetNode)
 		{
 			SourceNode = sourceNode;

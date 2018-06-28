@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace MMITest
 {
-    class Graph
+    public class Graph
     {
         #region Public Member
         // Liste der Knoten

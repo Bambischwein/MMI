@@ -21,7 +21,7 @@ namespace MMITest
             file = "/home/hanna/Desktop/KM1.txt";
 
 #else
-            file = @"C:\Users\Hanna\MMI\KM1.txt";
+            file = @"C:\Users\Hanna\MMI\KM3.txt";
 #endif
 
             // Graph einlese1
@@ -32,7 +32,17 @@ namespace MMITest
             Calc newCalculation = new Calc(NodeList, EdgeList);
 
 			// Console.WriteLine("Minfluss: {0}", newCalculation.SSP());
-			newCalculation.CC();
+			double test = newCalculation.CC(newGraph);
+            if (test < double.PositiveInfinity)
+            {
+                Console.WriteLine("fluss mit {0}", test);
+
+            }
+            else
+            {
+                Console.WriteLine("Kein möglicher Fluss.");
+
+            }
 
             int a = 0;
           }

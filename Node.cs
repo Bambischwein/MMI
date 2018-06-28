@@ -13,11 +13,20 @@ namespace MMITest
         public int ComponentCount { get; set; }
 		public double Balance { get; set; }
         public double BalanceModified { get; set; }
+        public Node Antecessor { get; set; }
+        public double Distance { get; set; }
 
         #endregion
 
         #region Konstruktor
 
+
+        public Node()
+        {
+            IsVisited = false;
+            Edges = new List<Edge>();
+            ID = -1;
+        }
         public Node (int id)
 		{
             ID = id;

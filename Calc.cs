@@ -801,27 +801,37 @@ namespace MMITest
         Schritt 4: Verändern Sie den Fluss 𝑓 entlang des Wegs 𝑝 um 𝛾 ∶= 𝑚𝑖𝑛_𝑒_𝜖_𝑝 𝑢^𝑓(𝑒).
         Schritt 5: Gehen Sie zu Schritt 2.
         */
-		private double EdmondsKarpMaxFluss(Node src, Node trg, Graph resi)
+		private double EdmondsKarpMaxFluss(Node src, Node trg, ref Graph resi)
         {
             Reset();
-            Console.WriteLine("Calculate Edmons Karp:");
+            //Console.WriteLine("Calculate Edmons Karp:");
 			Graph residualGraph = InitResidualGraph();
 			residualGraph = CreateResidualGraph (resi);
 			double maxFluss = 0.0;
             List<Edge> route = BreitensucheMaxFluss(src, trg, residualGraph);
-            
+
+            //Console.WriteLine("Route: ");
             while (route.Count > 0)
             {
-				double mFluss = minFluss(route);
+                //foreach (Edge e in route)
+                //{
+                //    Console.WriteLine("Kante von {0} nach {1}", e.SourceNode.ID, e.TargetNode.ID);
+                //}
+                double mFluss = minFluss(route);
 				maxFluss += mFluss;
-                Console.WriteLine("Max Fluss: {0}.", maxFluss);
-                Console.WriteLine("Update Edges.");
+                //Console.WriteLine("Min Fluss: {0}.", mFluss);
+                //Console.WriteLine("Max Fluss: {0}.", maxFluss);
+                //Console.WriteLine("Update Edges.");
                 CalculateCapacities(residualGraph, route, mFluss, resi);
                 residualGraph = CreateResidualGraph(resi);
                 route = BreitensucheMaxFluss(src, trg, residualGraph);                             
             }
-			resi = residualGraph;
-			return maxFluss;
+            if (src.Edges.Any(e => e.Capacity > 0))
+            {
+                return -1;
+            }
+
+            return maxFluss;
         }
 
 		private double minFluss (List<Edge> route)
@@ -848,7 +858,7 @@ namespace MMITest
 	                        // update flow and residual capacity                         
 	                        originalEdge.Flow += minFluss;
 	                        originalEdge.Capacity -= minFluss;
-	                        Console.WriteLine("Fluss und Kapazität von Kante {0} zu {1}. Fluss: {2}, Kapazität: {3}", e.SourceNode.ID, e.TargetNode.ID, originalEdge.Flow, originalEdge.Capacity);
+	                        //Console.WriteLine("Fluss und Kapazität von Kante {0} zu {1}. Fluss: {2}, Kapazität: {3}", e.SourceNode.ID, e.TargetNode.ID, originalEdge.Flow, originalEdge.Capacity);
                         }
                         catch (Exception)
                         {							
@@ -880,7 +890,7 @@ namespace MMITest
             //Rückkanten für alle Kanten, die Fluss haben
             List<Edge> FEdges = resi.AllEdges.Where(edge => edge.Flow > 0).ToList();
 
-            Console.WriteLine("Capacity Edges count: {0}", CEdges.Count);
+            //Console.WriteLine("Capacity Edges count: {0}", CEdges.Count);
 
             Graph residualGraph = new Graph();
             foreach (Node node in resi.NodeList)
@@ -899,14 +909,18 @@ namespace MMITest
             }
 
             
-            Console.WriteLine("Flow Edges count: {0}", FEdges.Count);
+            //Console.WriteLine("Flow Edges count: {0}", FEdges.Count);
 
             foreach (Edge e in FEdges)
             {
                 Edge newReverseEdge = new Edge(residualGraph.NodeList[e.TargetNode.ID], residualGraph.NodeList[e.SourceNode.ID], 0.0, e.Flow, -e.Cost);
-                newReverseEdge.Flow = 0;
+                if (!resi.AllEdges.Any(r => r.SourceNode.ID == newReverseEdge.SourceNode.ID && r.TargetNode.ID == newReverseEdge.TargetNode.ID))
+                {
+                    newReverseEdge.Flow = 0;
 
-                residualGraph.NodeList[e.TargetNode.ID].Add(newReverseEdge);
+                    residualGraph.NodeList[e.TargetNode.ID].Add(newReverseEdge);
+                }
+                
             }
             return residualGraph;
         }
@@ -1075,60 +1089,48 @@ namespace MMITest
 
         #region cycle canceling
 
-        public double CC()
+        public double CC(Graph g)
         {            
-            Dictionary<Node, Tuple<double, int>> kwb = new Dictionary<Node, Tuple<double, int>>();
             List<Edge> zykel = new List<Edge>();
-            Node zykelNode;
             double minResidualCapacity = double.PositiveInfinity;
-            // um den originalgraphen nicht zu verändern und ihn an ek weiterzugeben
-            Graph superGraph = InitResidualGraph ();
-
-            // Schritt 1: B-Fluss suchen, wenn keiner gefunden STOPP
-            // Super-Quelle und Super-Senke einfügen, dann edmonds-karp anwenden                
+            // Schritt 1: B-Fluss suchen, wenn keiner gefunden STOPP (Super-Quelle und Super-Senke einfügen, dann edmonds-karp anwenden)
             IList<Node> SrcList = NodeList.Where(n => n.Balance > 0).ToList();
             IList<Node> TrgList = NodeList.Where(n => n.Balance < 0).ToList();
-
-            Node superSource = new Node(superGraph.NodeList.Count());
+            Node superSource = new Node(g.NodeList.Count());
             foreach (Node n in SrcList)
             {
                 superSource.Add(new Edge(superSource, n, 0.0, n.Balance, 0.0));
-				superGraph.AllEdges.Add(new Edge(superSource, n, 0.0, n.Balance, 0.0));
+				g.AllEdges.Add(new Edge(superSource, n, 0.0, n.Balance, 0.0));
 				superSource.Balance += n.Balance;
             }
-			superGraph.NodeList.Add(superSource);
-            Node superSink = new Node(superGraph.NodeList.Count());
+			g.NodeList.Add(superSource);
+            Node superSink = new Node(g.NodeList.Count());
             foreach (Node n in TrgList)
             {
                 n.Add(new Edge(n, superSink, 0.0, -n.Balance, 0.0));
-				superGraph.AllEdges.Add(new Edge(n, superSink, 0.0, -n.Balance, 0.0));
+				g.AllEdges.Add(new Edge(n, superSink, 0.0, -n.Balance, 0.0));
 				superSink.Balance += n.Balance;
             }		
-            superGraph.NodeList.Add(superSink);
+            g.NodeList.Add(superSink);
+
 			// Berechnung des Flusses:
-			double initBFlow = EdmondsKarpMaxFluss(superSource, superSink, superGraph);
+			double initBFlow = EdmondsKarpMaxFluss(superSource, superSink, ref g);
             if (initBFlow <= 0)
             {
                 return double.NaN;
             }
-            RemoveSuperNodes(ref superGraph, superSource, superSink);
             // Schritt 2: Residualgraphen bestimmen
             Graph resi = InitCleanResidualGraph();
-            resi = CreateResidualGraph(superGraph);
-
+            resi = CreateResidualGraph(g);
             foreach (Node n in resi.NodeList)
             {
                 while (true)
                 {
                     // Schritt 3: f-augmentierenden Zykel im Residualgraphen mit negativen Kosten bestimmen, sonst STOPP
-				    zykelNode = MooreBellmanFordZykel(SrcList.First(), ref kwb, resi);
-                    if (resi.NodeList.Any(c => c.ID == zykelNode.ID))
-                    {
-                        zykel = FindZykel(zykelNode, kwb, resi);
-                    }
+                    zykel = _CalculateSPMooreBellmannFord(resi.NodeList, n, resi.AllEdges);
                     if (zykel.Count() <= 0)
                     {
-                        return double.PositiveInfinity;
+                        break;
                     }
                     else
                     {
@@ -1138,31 +1140,28 @@ namespace MMITest
                             double cap = resi.AllEdges.Where(u => u.SourceNode.ID == e.SourceNode.ID && u.TargetNode.ID == e.TargetNode.ID).First().Capacity;
                             minResidualCapacity = Math.Min(minResidualCapacity, cap);
                         }
-                        // Fluss vermindern IM Residualgraph
-                        // f(e) = f(e), falls e nicht in Z
-                        // f(e) = f(e) + m, falls e in Z
-                        // f(e) = f(e) - m, falls e gegen Z
-
                         foreach (Edge e in zykel)
-                        {
-                            Edge originalEdge = resi.AllEdges.Where(k => k.SourceNode.ID == e.SourceNode.ID && k.TargetNode.ID == e.TargetNode.ID).First();
-                            if (originalEdge != null)
+                        {                            
+                            try
                             {
+                                Edge originalEdge = g.AllEdges.Where(k => k.SourceNode.ID == e.SourceNode.ID && k.TargetNode.ID == e.TargetNode.ID).First();
                                 originalEdge.Flow += minResidualCapacity;
+                                originalEdge.Capacity -= minResidualCapacity;
+                                originalEdge.Visited = true;                                
                             }
-                            else
+                            catch (Exception)
                             {
-                                originalEdge = resi.AllEdges.Where(j => j.SourceNode.ID == e.TargetNode.ID && j.TargetNode.ID == e.SourceNode.ID).First();
+                                Edge originalEdge = g.AllEdges.Where(j => j.SourceNode.ID == e.TargetNode.ID && j.TargetNode.ID == e.SourceNode.ID).First();
                                 originalEdge.Flow -= minResidualCapacity;
-                            }
-                            // sonst bleibt so, wie es ist, da e nicht in Z
-                            
+                                originalEdge.Capacity += minResidualCapacity;
+                            }                           
                         }
-                        resi = CreateResidualGraph(resi);
+                        resi = CreateResidualGraph(g);
                     }
                     // Schritt 5: Weiter mit Schritt 2
                 }
             }
+            double sum = g.EdgeList.Sum(edge => edge.Cost * edge.Flow);
             return EdgeList.Sum(edge => edge.Cost * edge.Flow);
         }
 
@@ -1173,44 +1172,44 @@ namespace MMITest
             int test = kwb[resi.NodeList.Where(b => b.ID == start.ID).First()].Item2;
              Node n = NodeList.Where(c => c.ID == kwb[resi.NodeList.Where(b => b.ID == start.ID).First()].Item2).First();
             Node pred;
-            zykelRueck.Add(new Edge(start, n));
-            while (n != start)
+            if (n != start)
+            {
+                zykelRueck.Add(new Edge(start, n));
+            }
+            else
+            {
+                return new List<Edge>();
+            }
+            int k = 0;
+            int j = resi.NodeList.Count();
+            while (n != start && k != j)
             {
                 pred = n;
                 n = NodeList.Where(c => c.ID == kwb[resi.NodeList.Where(b => b.ID == n.ID).First()].Item2).First();
-                zykelRueck.Add(new Edge(pred, n));
+                if (n == pred)
+                {
+                    return new List<Edge>();
+                }
+                if (!zykelRueck.Contains(new Edge(pred, n)))
+                {
+                    zykelRueck.Add(new Edge(pred, n));
+                }
+                k++;
             }
             int zykelcount = zykelRueck.Count();
-            for (int i = 0; i < zykelcount; i++)
+           for (int i = 0; i<zykelcount; i++)
             {
                 zykel.Add(new Edge(zykelRueck.Last().TargetNode, zykelRueck.Last().SourceNode));
                 zykelRueck.Remove(zykelRueck.Last());
             }
             return zykel;
         }
-        private void RemoveSuperNodes(ref Graph g, Node src, Node trg)
-        {
-            g.NodeList.Remove(src);
-            List<Edge> edgeToSuperSink = g.AllEdges.Where(e => e.TargetNode.ID == trg.ID).ToList();
-            foreach (Edge e in edgeToSuperSink)
-            {
-                e.SourceNode.Remove(e);
-            }
-            g.NodeList.Remove(trg);
-        }
 
-        private List<Edge> GetZykel(Node superSource, Node superSink, Dictionary<Node, Tuple<double, int>> kwb, Graph resi)
-        {
-
-
-            return new List<Edge>();
-        }
-
-        private Node MooreBellmanFordZykel(Node s, ref Dictionary<Node, Tuple<double, int>> kwb, Graph resi)
+        private List<Edge> MooreBellmanFordZykel(Node s, Graph resi)
         {
             Reset();
             // Initialisierung
-            kwb = Initialize(s, resi);
+            Dictionary<Node, Tuple<double, int>> kwb = Initialize(s, resi);
             resi.NodeList[s.ID].IsVisited = true;
             // Durchführung: n - 1 mal
             for (int i = 0; i < resi.NodeList.Count() - 1; i++)
@@ -1227,20 +1226,120 @@ namespace MMITest
                     }
                 }
             }
-            List<Edge> cycle = new List<Edge>();
             foreach (Edge e in EdgeList)
             {
                 Node src = resi.NodeList.Where(n => n.ID == e.SourceNode.ID).First();
                 Node trg = resi.NodeList.Where(ne => ne.ID == e.TargetNode.ID).First();
                 if (kwb[src].Item1 + e.Cost < kwb[trg].Item1)
                 {
-                    cycle.Add(e);
-
-                    return e.SourceNode;
+                    return FindZykel(e.SourceNode, kwb, resi); ;
                 }
             }
-            return new Node(NodeList.Count() + 1);
+            return new List<Edge>();
         }
+
+        private List<Edge> _CalculateSPMooreBellmannFord(IList<Node> Nodes, Node startNode, IList<Edge> AllEdges)
+        {
+            List<Edge> NegativeCircle = new List<Edge>();
+            _ResetMooreBellmanFord(Nodes);
+            Nodes.Where(n => n.ID == startNode.ID).First().Distance = 0.0;
+            for (int i = 0; i < Nodes.Count - 1; i++)
+            {
+                foreach (Edge e in AllEdges)
+                {
+                    if (e.SourceNode.Distance + e.Cost < e.TargetNode.Distance)
+                    {
+                        e.TargetNode.Distance = e.SourceNode.Distance + e.Cost;
+                        e.TargetNode.Antecessor = e.SourceNode;
+                        e.Visited = true;
+                    }
+                }
+            }
+
+            foreach (Edge e in AllEdges)
+            {
+                if (e.SourceNode.Distance + e.Cost < e.TargetNode.Distance)
+                {
+                    //run backwards until a circle is found
+                    NegativeCircle = _CreateCircle(Nodes, e.TargetNode);
+                    return NegativeCircle;
+                }
+            }
+            return NegativeCircle;
+        }
+
+
+        private List<Edge> _CreateCircle(IList<Node> Nodes, Node startNode)
+        {
+            List<Edge> circle = new List<Edge>();
+            Node iterator = startNode;
+            Edge e = new Edge();
+
+            if (iterator.Antecessor != null)
+            {
+                for (int i = Nodes.Count; i >= 0; i--)
+                {
+                    //get edge from antecessor to current node
+                    e = Nodes.SelectMany(node => node.Edges).Where(edge => edge.SourceNode.ID == iterator.Antecessor.ID && edge.TargetNode.ID == iterator.ID).FirstOrDefault();
+                    if (!circle.Contains(e))
+                    {
+                        circle.Add(e);
+                    }
+                    else //cut circle
+                    {
+                        circle.Add(e);
+
+                        //reverse the circle
+                        List<Edge> reverseCircle2 = new List<Edge>();
+
+
+                        for (int j = circle.Count - 1; j >= 0; j--)
+                        {
+                            reverseCircle2.Add(circle.ElementAt(j));
+                        }
+
+
+                        List<Edge> circle2 = new List<Edge>();
+                        Edge firstEdge = reverseCircle2.First();
+                        circle2.Add(firstEdge);
+                        for (int k = 1; k < reverseCircle2.Count; k++)
+                        {
+                            if (reverseCircle2.ElementAt(k) == firstEdge)
+                            { return circle2; }
+                            circle2.Add(reverseCircle2.ElementAt(k));
+                        }
+
+
+                        break;
+                    }
+                    iterator = e.SourceNode;
+                    if (iterator == startNode)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            //reverse the circle
+            List<Edge> reverseCircle = new List<Edge>();
+
+            for (int i = circle.Count - 1; i >= 0; i--)
+            {
+                reverseCircle.Add(circle.ElementAt(i));
+            }
+
+            return reverseCircle;
+        }
+
+        private void _ResetMooreBellmanFord(IList<Node> Nodes)
+        {
+            foreach (Node n in Nodes)
+            {
+                n.Distance = double.PositiveInfinity;
+                n.Antecessor = null;
+            }
+        }
+
         #endregion
         public void EdgeListToString()
         {
