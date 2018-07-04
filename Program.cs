@@ -21,7 +21,7 @@ namespace MMITest
 			file = "/home/hanna/Desktop/KM3.txt";
 
 #else
-            file = @"C:\Users\Hanna\MMI\KM3.txt";z
+            file = @"C:\Users\Hanna\MMI\Matching_100_100.txt";
 #endif
 
             // Graph einlese1

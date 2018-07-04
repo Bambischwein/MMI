@@ -1339,7 +1339,7 @@ namespace MMITest
 
 		#region MaxMatchings
 
-		public double MaxMatchings(List<Node> nodeListA, List<Node> nodeListB, Graph g)
+		public List<Edge> MaxMatchings(List<Node> nodeListA, List<Node> nodeListB, Graph g)
 		{
 			Node superSource = new Node(g.NodeList.Count());
 			foreach (Node n in nodeListA)
@@ -1362,11 +1362,9 @@ namespace MMITest
 
 			// Berechnung des Flusses:
 			double initBFlow = EdmondsKarpMaxFluss(superSource, superSink, ref g);
-			if (initBFlow <= 0)
-			{
-				return double.NaN;
-			}
-			return initBFlow;
+            List<Edge> matchingEdges = NodeList.SelectMany(node => node.Edges).Where(edge => edge.SourceNode.ID != superSource.ID && edge.TargetNode.ID != superSink.ID && edge.Flow > 0).ToList();
+
+            return matchingEdges;
 		}
 
 		#endregion
