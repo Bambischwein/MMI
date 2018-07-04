@@ -12,6 +12,9 @@ namespace MMITest
         public IList<Node> NodeList { get; set; }
         // Liste der Kanten
         public IList<Edge> EdgeList { get; set; }
+		// Liste der Knoten für den letzten Algorithmus
+		public IList<Node> NodeListA { get; set; }
+		public IList<Node> NodeListB { get; set; }
 
         #endregion
 
@@ -107,10 +110,7 @@ namespace MMITest
                     
 				}
 			}
-
-
-
-
+				
             // Knoten erstellen und in Dictionary einfügen
             for (int i = 0; i < numberOfNodes; i++)
             {
@@ -180,6 +180,61 @@ namespace MMITest
             EdgeList = NodeList.SelectMany(node => node.Edges).ToList();
             return NodeList;
         }
+
+		public void readMatchingGraph(ref List<Node> NodeListA, ref List<Node> NodeListB, string path)
+		{
+			List<string> list = new List<string>();
+			string line = String.Empty;
+
+			using (StreamReader reader = new StreamReader(path))
+				while ((line = reader.ReadLine()) != null)
+				{
+					list.Add(line);
+				}
+
+			// Anzahl der Knoten
+			int numberOfNodes = Convert.ToInt32(list[0]);
+			int numberOfNodesInA = Convert.ToInt32 (list [1]);
+
+
+			// Knoten erstellen und in Dictionary einfügen
+			for (int i = 0; i < numberOfNodesInA; i++)
+			{
+				Node newNode = new Node(i);
+				NodeListA.Add(newNode);
+				NodeList.Add (newNode);
+			}
+
+			// Knoten erstellen und in Dictionary einfügen
+			for (int k = numberOfNodesInA; k < numberOfNodes; k++)
+			{
+				Node newNode = new Node(k);
+				NodeListB.Add(newNode);
+				NodeList.Add (newNode);
+			}
+
+			// Daten einlesen und verarbeiten
+
+			for (int j = 2; j < list.Count; j++)
+			{
+				// Default Values
+				int sourceID = -1;
+				int targetID = -1;
+
+				string[] elements = list[j].Split('\t');
+				sourceID = Convert.ToInt32(elements[0]);
+				targetID = Convert.ToInt32(elements[1]);
+				if (elements.Count() == 2)
+				{
+					// Source- und Targetnode verbinden, da ungerichtet auch rückrichtung verbinden  
+					// kapazität auf 1 setzen
+					NodeListA[sourceID].Add(new Edge(NodeListA[sourceID], NodeListB.Where (n => n.ID == targetID).First (), 0.0, 1,0));
+					NodeList[sourceID].Add(new Edge(NodeListA[sourceID], NodeListB.Where (n => n.ID == targetID).First (), 0.0, 1,0));
+				}
+
+			}
+			EdgeList = NodeListA.SelectMany(node => node.Edges).ToList();
+		}
 
         #endregion
 

@@ -18,31 +18,27 @@ namespace MMITest
 
             // BS unterscheidung
 #if __MonoCS__
-            file = "/home/hanna/Desktop/KM1.txt";
+			file = "/home/hanna/Desktop/KM3.txt";
 
 #else
-            file = @"C:\Users\Hanna\MMI\KM3.txt";
+            file = @"C:\Users\Hanna\MMI\KM3.txt";z
 #endif
 
             // Graph einlese1
             Graph newGraph = new Graph();
-			IList<Node> NodeList = newGraph.ReadKantenListe(file, true, true);
-            IList<Edge> EdgeList = newGraph.EdgeList;
+			// IList<Node> NodeList = newGraph.ReadKantenListe(file, true, true);
+            // IList<Edge> EdgeList = newGraph.EdgeList;
+			// matchinggraph einlesen
+			List<Node> NodeListA = new List<Node>();
+			List<Node> NodeListB = new List<Node>();
+			newGraph.readMatchingGraph (ref NodeListA, ref NodeListB, file);		       
 
-            Calc newCalculation = new Calc(NodeList, EdgeList);
 
-			// Console.WriteLine("Minfluss: {0}", newCalculation.SSP());
-			double test = newCalculation.CC(newGraph);
-            if (test < double.PositiveInfinity)
-            {
-                Console.WriteLine("fluss mit {0}", test);
+			// Calc c = new Calc (NodeList, EdgeList);
+			// c.CC (newGraph);
 
-            }
-            else
-            {
-                Console.WriteLine("Kein möglicher Fluss.");
-
-            }
+			Calc newCalc = new Calc (newGraph.NodeList);
+			newCalc.MaxMatchings (NodeListA, NodeListB, newGraph);
 
             int a = 0;
           }
